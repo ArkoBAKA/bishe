@@ -239,6 +239,78 @@ func listForumPostsHandler(deps Deps) gin.HandlerFunc {
 	}
 }
 
+func listVisiblePostsHandler(deps Deps) gin.HandlerFunc {
+	type row struct {
+		ID           uint64    `gorm:"column:id"`
+		ForumID      uint64    `gorm:"column:forum_id"`
+		ForumName    string    `gorm:"column:forum_name"`
+		Title        string    `gorm:"column:title"`
+		AuthorID     uint64    `gorm:"column:author_id"`
+		LikeCount    int64     `gorm:"column:like_count"`
+		CommentCount int64     `gorm:"column:comment_count"`
+		ViewCount    int64     `gorm:"column:view_count"`
+		CreatedAt    time.Time `gorm:"column:created_at"`
+	}
+
+	return func(c *gin.Context) {
+		pageNum := parsePositiveIntWithDefault(c.Query("pageNum"), 1)
+		pageSize := parsePositiveIntWithDefault(c.Query("pageSize"), 10)
+		if pageNum <= 0 || pageSize <= 0 || pageSize > 100 {
+			RespondFail(c, http.StatusBadRequest, 30001, "参数非法")
+			return
+		}
+
+		base := deps.DB.WithContext(c.Request.Context()).
+			Table("posts").
+			Joins("JOIN forums ON forums.id = posts.forum_id AND forums.deleted_at IS NULL").
+			Where("posts.deleted_at IS NULL").
+			Where("posts.status = ?", "visible")
+
+		var total int64
+		if err := base.Count(&total).Error; err != nil {
+			RespondFail(c, http.StatusInternalServerError, 50000, "internal error")
+			return
+		}
+
+		var rows []row
+		if err := base.Select(strings.Join([]string{
+			"posts.id",
+			"posts.forum_id",
+			"forums.name AS forum_name",
+			"posts.title",
+			"posts.author_id",
+			"posts.like_count",
+			"posts.comment_count",
+			"posts.view_count",
+			"posts.created_at",
+		}, ", ")).
+			Order("posts.created_at desc").
+			Limit(pageSize).
+			Offset((pageNum - 1) * pageSize).
+			Scan(&rows).Error; err != nil {
+			RespondFail(c, http.StatusInternalServerError, 50000, "internal error")
+			return
+		}
+
+		list := make([]map[string]any, 0, len(rows))
+		for _, p := range rows {
+			list = append(list, map[string]any{
+				"postId":       p.ID,
+				"forumId":      p.ForumID,
+				"forumName":    p.ForumName,
+				"title":        p.Title,
+				"authorId":     p.AuthorID,
+				"likeCount":    p.LikeCount,
+				"commentCount": p.CommentCount,
+				"viewCount":    p.ViewCount,
+				"createdAt":    p.CreatedAt.Format(time.RFC3339),
+			})
+		}
+
+		RespondOK(c, map[string]any{"list": list, "total": total})
+	}
+}
+
 func getPostHandler(deps Deps) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		postID, err := strconv.ParseUint(c.Param("postId"), 10, 64)

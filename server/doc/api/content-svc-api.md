@@ -5,6 +5,7 @@
 ## 接口清单
 
 - `POST /api/v1/posts`
+- `GET /api/v1/posts`
 - `PUT /api/v1/posts/{postId}`
 - `DELETE /api/v1/posts/{postId}`
 - `GET /api/v1/forums/{forumId}/posts`
@@ -200,6 +201,66 @@
 
 ### 业务规则（实现必须遵守）
 - 删除为软删（保留审计）。
+
+---
+
+## 可见帖子列表（全站）
+
+- **Method**: `GET`
+- **Path**: `/api/v1/posts`
+- **Auth**: 不需要
+- **角色**: `guest`
+- **说明**: 分页查询全站审核通过（`visible`）的帖子列表，按创建时间倒序（最新在前）；每条帖子返回所属贴吧信息（`forumId` + `forumName`）
+
+### 请求参数
+
+#### Query
+| 字段 | 类型 | 必填 | 默认值 | 说明 |
+|---|---|---|---|---|
+| pageNum | number | 否 | 1 | 页码 |
+| pageSize | number | 否 | 10 | 每页条数 |
+
+### 响应
+
+#### 成功示例
+```json
+{
+  "code": 0,
+  "message": "ok",
+  "data": {
+    "list": [
+      {
+        "postId": 10001,
+        "forumId": 10001,
+        "forumName": "Golang",
+        "title": "Hello",
+        "authorId": 10001,
+        "likeCount": 0,
+        "commentCount": 0,
+        "viewCount": 0,
+        "createdAt": "2026-04-21T10:30:00+08:00"
+      }
+    ],
+    "total": 1
+  }
+}
+```
+
+#### data 字段结构
+| 字段 | 类型 | 说明 |
+|---|---|---|
+| list | array | 帖子列表 |
+| total | number | 总数 |
+
+### 错误码
+| code | 含义 | 触发条件 |
+|---|---|---|
+| 30001 | 参数非法 | pageNum/pageSize 非法 |
+
+### 业务规则（实现必须遵守）
+- 仅返回 `visible`（审核通过）帖子。
+- 排序：`createdAt` 倒序（最新在前）。
+- `forumName` 需由 `forumId` 反查得到。
 
 ---
 

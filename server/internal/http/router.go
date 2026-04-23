@@ -297,6 +297,23 @@ func NewRouter(deps Deps) *gin.Engine {
 			Description: "删除帖子（软删；作者或管理员）",
 		}, deletePostHandler(deps)))
 
+		v1.GET("/posts", WithDoc(APIDoc{
+			Name:        "可见帖子列表（全站）",
+			Method:      "GET",
+			Path:        "/api/v1/posts",
+			Auth:        "不需要",
+			Role:        "guest",
+			Description: "分页查询全站审核通过（visible）的帖子列表，按创建时间倒序（最新在前）",
+			Query: []FieldDoc{
+				{Name: "pageNum", Type: "number", Required: false, Default: "1", Desc: "页码"},
+				{Name: "pageSize", Type: "number", Required: false, Default: "10", Desc: "每页条数"},
+			},
+			Data: []FieldDoc{
+				{Name: "list", Type: "array", Desc: "帖子列表"},
+				{Name: "total", Type: "number", Desc: "总数"},
+			},
+		}, listVisiblePostsHandler(deps)))
+
 		v1.GET("/forums/:forumId/posts", WithDoc(APIDoc{
 			Name:        "贴吧帖子列表",
 			Method:      "GET",

@@ -1,0 +1,39 @@
+app:
+  ginMode: debug
+  autoMigrate: true
+http:
+  addr: ":8080"
+mysql:
+  host: "123.249.45.216"
+  port: 13306
+  user: "root"
+  password: "Wz102411.."
+  dbName: "bishe"
+  params:
+    charset: "utf8mb4"
+    parseTime: "True"
+    loc: "Local"
+redis:
+  host: "123.249.45.216"
+  port: 16379
+  password: "Wz102411"
+  db: 0
+auth:
+  jwtSecret: "dev-secret-change-me"
+  tokenTTLSeconds: 7200
+upload:
+  baseDir: "data/uploads"
+  maxFileMB: 50
+  maxRequestMB: 100
+  allowedExt:
+    - jpg
+    - jpeg
+    - png
+    - gif
+    - webp
+    - mp4
+    - mov
+    - pdf
+    - zip
+    - txt
+    - md

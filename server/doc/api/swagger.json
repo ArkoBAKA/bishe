@@ -1,0 +1,2782 @@
+{
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "bearerFormat": "JWT",
+        "scheme": "bearer",
+        "type": "http"
+      }
+    }
+  },
+  "info": {
+    "title": "API",
+    "version": "1.0.0"
+  },
+  "openapi": "3.0.3",
+  "paths": {
+    "/api/v1/admin/comments/{commentId}": {
+      "delete": {
+        "description": "删除评论（软删）",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "commentId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "integer"
+                    },
+                    "data": {
+                      "type": "object"
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message",
+                    "data"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "ok"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "管理员删除评论",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/api/v1/admin/posts/pending": {
+      "get": {
+        "description": "分页查询待审核帖子列表（status=pending）",
+        "parameters": [
+          {
+            "description": "页码",
+            "in": "query",
+            "name": "pageNum",
+            "required": false,
+            "schema": {
+              "default": "1",
+              "type": "number"
+            }
+          },
+          {
+            "description": "每页条数",
+            "in": "query",
+            "name": "pageSize",
+            "required": false,
+            "schema": {
+              "default": "10",
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "integer"
+                    },
+                    "data": {
+                      "properties": {
+                        "list": {
+                          "description": "帖子列表",
+                          "items": {},
+                          "type": "array"
+                        },
+                        "total": {
+                          "description": "总数",
+                          "type": "number"
+                        }
+                      },
+                      "type": "object"
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message",
+                    "data"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "ok"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "待审核帖子列表",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/api/v1/admin/posts/{postId}": {
+      "delete": {
+        "description": "删除帖子（软删）",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "postId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "integer"
+                    },
+                    "data": {
+                      "type": "object"
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message",
+                    "data"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "ok"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "管理员删除帖子",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/api/v1/admin/posts/{postId}/review": {
+      "put": {
+        "description": "审核帖子并更新可见状态",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "postId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "action": {
+                    "description": "approve/reject/hide",
+                    "type": "string"
+                  },
+                  "reviewRemark": {
+                    "description": "处理备注",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "action"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "integer"
+                    },
+                    "data": {
+                      "properties": {
+                        "status": {
+                          "description": "更新后的帖子状态",
+                          "type": "string"
+                        }
+                      },
+                      "type": "object"
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message",
+                    "data"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "ok"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "审核帖子并更新状态",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/api/v1/admin/reports": {
+      "get": {
+        "description": "分页查询举报审计单列表",
+        "parameters": [
+          {
+            "description": "页码",
+            "in": "query",
+            "name": "pageNum",
+            "required": false,
+            "schema": {
+              "default": "1",
+              "type": "number"
+            }
+          },
+          {
+            "description": "每页条数",
+            "in": "query",
+            "name": "pageSize",
+            "required": false,
+            "schema": {
+              "default": "10",
+              "type": "number"
+            }
+          },
+          {
+            "description": "pending/processed",
+            "in": "query",
+            "name": "status",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "integer"
+                    },
+                    "data": {
+                      "properties": {
+                        "list": {
+                          "description": "举报单列表",
+                          "items": {},
+                          "type": "array"
+                        },
+                        "total": {
+                          "description": "总数",
+                          "type": "number"
+                        }
+                      },
+                      "type": "object"
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message",
+                    "data"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "ok"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "举报列表（管理员）",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/api/v1/admin/reports/{reportId}/process": {
+      "put": {
+        "description": "处理举报审计单并执行动作",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "reportId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "action": {
+                    "description": "close/deletePost/deleteComment/hidePost/banUser",
+                    "type": "string"
+                  },
+                  "banUntil": {
+                    "description": "RFC3339（banUser 可用）",
+                    "type": "string"
+                  },
+                  "durationSeconds": {
+                    "description": "秒（banUser 可用）",
+                    "type": "number"
+                  },
+                  "processRemark": {
+                    "description": "处理备注",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "action"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "integer"
+                    },
+                    "data": {
+                      "type": "object"
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message",
+                    "data"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "ok"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "处理举报并执行动作",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/api/v1/admin/users/{userId}/ban": {
+      "put": {
+        "description": "封禁用户（设置 status=banned 与 banUntil）",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "userId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "banUntil": {
+                    "description": "封禁截止时间（RFC3339）",
+                    "type": "string"
+                  },
+                  "durationSeconds": {
+                    "description": "封禁时长（秒）",
+                    "type": "number"
+                  },
+                  "remark": {
+                    "description": "备注",
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          },
+          "required": false
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "integer"
+                    },
+                    "data": {
+                      "properties": {
+                        "banUntil": {
+                          "description": "RFC3339",
+                          "type": "string"
+                        },
+                        "status": {
+                          "description": "banned",
+                          "type": "string"
+                        }
+                      },
+                      "type": "object"
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message",
+                    "data"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "ok"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "封禁用户",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/api/v1/comments/{commentId}": {
+      "delete": {
+        "description": "删除评论（软删；作者或管理员）",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "commentId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "integer"
+                    },
+                    "data": {
+                      "type": "object"
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message",
+                    "data"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "ok"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "删除评论",
+        "tags": [
+          "comments"
+        ]
+      }
+    },
+    "/api/v1/docs": {
+      "get": {
+        "description": "返回自动生成的接口文档。format=md/json",
+        "parameters": [
+          {
+            "description": "md 或 json",
+            "in": "query",
+            "name": "format",
+            "required": false,
+            "schema": {
+              "default": "md",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "integer"
+                    },
+                    "data": {
+                      "type": "object"
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message",
+                    "data"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "ok"
+          }
+        },
+        "summary": "接口文档（自动生成）",
+        "tags": [
+          "docs"
+        ]
+      }
+    },
+    "/api/v1/feed": {
+      "get": {
+        "description": "查询我关注的贴吧下的帖子时间线（按发布时间倒序分页）",
+        "parameters": [
+          {
+            "description": "页码",
+            "in": "query",
+            "name": "pageNum",
+            "required": false,
+            "schema": {
+              "default": "1",
+              "type": "number"
+            }
+          },
+          {
+            "description": "每页条数",
+            "in": "query",
+            "name": "pageSize",
+            "required": false,
+            "schema": {
+              "default": "10",
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "integer"
+                    },
+                    "data": {
+                      "properties": {
+                        "list": {
+                          "description": "帖子列表",
+                          "items": {},
+                          "type": "array"
+                        },
+                        "total": {
+                          "description": "总数",
+                          "type": "number"
+                        }
+                      },
+                      "type": "object"
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message",
+                    "data"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "ok"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Feed（方案 A）",
+        "tags": [
+          "feed"
+        ]
+      }
+    },
+    "/api/v1/follows": {
+      "delete": {
+        "description": "取消关注（幂等；使用状态位不物理删除）",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "targetId": {
+                    "description": "目标 ID",
+                    "type": "number"
+                  },
+                  "targetType": {
+                    "description": "forum/user",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "targetType",
+                  "targetId"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "integer"
+                    },
+                    "data": {
+                      "type": "object"
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message",
+                    "data"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "ok"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "取消关注",
+        "tags": [
+          "follows"
+        ]
+      },
+      "post": {
+        "description": "关注贴吧或用户（幂等；取消后可恢复）",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "targetId": {
+                    "description": "目标 ID",
+                    "type": "number"
+                  },
+                  "targetType": {
+                    "description": "forum/user",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "targetType",
+                  "targetId"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "integer"
+                    },
+                    "data": {
+                      "type": "object"
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message",
+                    "data"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "ok"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "创建关注关系",
+        "tags": [
+          "follows"
+        ]
+      }
+    },
+    "/api/v1/follows/me": {
+      "get": {
+        "description": "获取我的关注列表（默认 active，createdAt desc）",
+        "parameters": [
+          {
+            "description": "页码",
+            "in": "query",
+            "name": "pageNum",
+            "required": false,
+            "schema": {
+              "default": "1",
+              "type": "number"
+            }
+          },
+          {
+            "description": "每页数量",
+            "in": "query",
+            "name": "pageSize",
+            "required": false,
+            "schema": {
+              "default": "10",
+              "type": "number"
+            }
+          },
+          {
+            "description": "forum/user",
+            "in": "query",
+            "name": "targetType",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "integer"
+                    },
+                    "data": {
+                      "properties": {
+                        "list": {
+                          "description": "关注列表",
+                          "items": {},
+                          "type": "array"
+                        },
+                        "total": {
+                          "description": "总数",
+                          "type": "number"
+                        }
+                      },
+                      "type": "object"
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message",
+                    "data"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "ok"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "我的关注列表",
+        "tags": [
+          "follows"
+        ]
+      }
+    },
+    "/api/v1/forums": {
+      "get": {
+        "description": "分页查询贴吧列表（按创建时间倒序）",
+        "parameters": [
+          {
+            "description": "页码，从 1 开始",
+            "in": "query",
+            "name": "pageNum",
+            "required": false,
+            "schema": {
+              "default": "1",
+              "type": "number"
+            }
+          },
+          {
+            "description": "每页条数",
+            "in": "query",
+            "name": "pageSize",
+            "required": false,
+            "schema": {
+              "default": "10",
+              "type": "number"
+            }
+          },
+          {
+            "description": "名称关键字（模糊匹配）",
+            "in": "query",
+            "name": "keyword",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "integer"
+                    },
+                    "data": {
+                      "properties": {
+                        "list": {
+                          "description": "贴吧列表",
+                          "items": {},
+                          "type": "array"
+                        },
+                        "total": {
+                          "description": "总数",
+                          "type": "number"
+                        }
+                      },
+                      "type": "object"
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message",
+                    "data"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "ok"
+          }
+        },
+        "summary": "贴吧列表",
+        "tags": [
+          "forums"
+        ]
+      },
+      "post": {
+        "description": "创建贴吧",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "coverUrl": {
+                    "description": "封面图地址",
+                    "type": "string"
+                  },
+                  "description": {
+                    "description": "贴吧简介",
+                    "type": "string"
+                  },
+                  "name": {
+                    "description": "贴吧名称（全局唯一）",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "name"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "integer"
+                    },
+                    "data": {
+                      "properties": {
+                        "forumId": {
+                          "description": "新创建贴吧 ID",
+                          "type": "number"
+                        }
+                      },
+                      "type": "object"
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message",
+                    "data"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "ok"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "创建贴吧",
+        "tags": [
+          "forums"
+        ]
+      }
+    },
+    "/api/v1/forums/{forumId}": {
+      "get": {
+        "description": "获取贴吧详情",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "forumId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "integer"
+                    },
+                    "data": {
+                      "type": "object"
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message",
+                    "data"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "ok"
+          }
+        },
+        "summary": "贴吧详情",
+        "tags": [
+          "forums"
+        ]
+      },
+      "put": {
+        "description": "编辑指定贴吧（仅创建者/owner）",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "forumId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "integer"
+                    },
+                    "data": {
+                      "type": "object"
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message",
+                    "data"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "ok"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "编辑贴吧",
+        "tags": [
+          "forums"
+        ]
+      }
+    },
+    "/api/v1/forums/{forumId}/posts": {
+      "get": {
+        "description": "分页查询某贴吧下帖子列表（默认仅返回可见帖子）",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "forumId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "页码",
+            "in": "query",
+            "name": "pageNum",
+            "required": false,
+            "schema": {
+              "default": "1",
+              "type": "number"
+            }
+          },
+          {
+            "description": "每页条数",
+            "in": "query",
+            "name": "pageSize",
+            "required": false,
+            "schema": {
+              "default": "10",
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "integer"
+                    },
+                    "data": {
+                      "properties": {
+                        "list": {
+                          "description": "帖子列表",
+                          "items": {},
+                          "type": "array"
+                        },
+                        "total": {
+                          "description": "总数",
+                          "type": "number"
+                        }
+                      },
+                      "type": "object"
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message",
+                    "data"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "ok"
+          }
+        },
+        "summary": "贴吧帖子列表",
+        "tags": [
+          "forums"
+        ]
+      }
+    },
+    "/api/v1/likes": {
+      "post": {
+        "description": "点赞帖子或评论（仅新增，不取消）",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "targetId": {
+                    "description": "目标 ID",
+                    "type": "number"
+                  },
+                  "targetType": {
+                    "description": "post/comment",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "targetType",
+                  "targetId"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "integer"
+                    },
+                    "data": {
+                      "type": "object"
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message",
+                    "data"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "ok"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "点赞（仅新增）",
+        "tags": [
+          "likes"
+        ]
+      }
+    },
+    "/api/v1/notifications": {
+      "get": {
+        "description": "获取我的通知列表（按创建时间倒序）",
+        "parameters": [
+          {
+            "description": "页码",
+            "in": "query",
+            "name": "pageNum",
+            "required": false,
+            "schema": {
+              "default": "1",
+              "type": "number"
+            }
+          },
+          {
+            "description": "每页数量",
+            "in": "query",
+            "name": "pageSize",
+            "required": false,
+            "schema": {
+              "default": "10",
+              "type": "number"
+            }
+          },
+          {
+            "description": "是否已读筛选",
+            "in": "query",
+            "name": "isRead",
+            "required": false,
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "integer"
+                    },
+                    "data": {
+                      "properties": {
+                        "list": {
+                          "description": "通知列表",
+                          "items": {},
+                          "type": "array"
+                        },
+                        "total": {
+                          "description": "总数",
+                          "type": "number"
+                        }
+                      },
+                      "type": "object"
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message",
+                    "data"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "ok"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "通知列表",
+        "tags": [
+          "notifications"
+        ]
+      }
+    },
+    "/api/v1/notifications/read-all": {
+      "put": {
+        "description": "将我所有未读通知标记为已读（幂等）",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "integer"
+                    },
+                    "data": {
+                      "properties": {
+                        "affected": {
+                          "description": "被更新为已读的数量",
+                          "type": "number"
+                        }
+                      },
+                      "type": "object"
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message",
+                    "data"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "ok"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "全部通知已读",
+        "tags": [
+          "notifications"
+        ]
+      }
+    },
+    "/api/v1/notifications/{notificationId}/read": {
+      "put": {
+        "description": "将指定通知标记为已读（幂等）",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "notificationId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "integer"
+                    },
+                    "data": {
+                      "type": "object"
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message",
+                    "data"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "ok"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "标记通知已读",
+        "tags": [
+          "notifications"
+        ]
+      }
+    },
+    "/api/v1/posts": {
+      "post": {
+        "description": "发布帖子，初始可见状态为 pending（待审核）",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "content": {
+                    "description": "正文（1~5000）",
+                    "type": "string"
+                  },
+                  "forumId": {
+                    "description": "贴吧 ID",
+                    "type": "number"
+                  },
+                  "title": {
+                    "description": "标题（1~200）",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "forumId",
+                  "title",
+                  "content"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "integer"
+                    },
+                    "data": {
+                      "properties": {
+                        "postId": {
+                          "description": "帖子 ID",
+                          "type": "number"
+                        },
+                        "status": {
+                          "description": "初始状态 pending",
+                          "type": "string"
+                        }
+                      },
+                      "type": "object"
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message",
+                    "data"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "ok"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "发布帖子",
+        "tags": [
+          "posts"
+        ]
+      }
+    },
+    "/api/v1/posts/{postId}": {
+      "delete": {
+        "description": "删除帖子（软删；作者或管理员）",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "postId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "integer"
+                    },
+                    "data": {
+                      "type": "object"
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message",
+                    "data"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "ok"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "删除帖子",
+        "tags": [
+          "posts"
+        ]
+      },
+      "get": {
+        "description": "获取帖子详情（会增加 viewCount）",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "postId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "integer"
+                    },
+                    "data": {
+                      "type": "object"
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message",
+                    "data"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "ok"
+          }
+        },
+        "summary": "帖子详情",
+        "tags": [
+          "posts"
+        ]
+      },
+      "put": {
+        "description": "编辑帖子（仅作者）",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "postId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "integer"
+                    },
+                    "data": {
+                      "type": "object"
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message",
+                    "data"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "ok"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "编辑帖子",
+        "tags": [
+          "posts"
+        ]
+      }
+    },
+    "/api/v1/posts/{postId}/comments": {
+      "get": {
+        "description": "分页查询评论列表（按创建时间正序）",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "postId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "页码",
+            "in": "query",
+            "name": "pageNum",
+            "required": false,
+            "schema": {
+              "default": "1",
+              "type": "number"
+            }
+          },
+          {
+            "description": "每页条数",
+            "in": "query",
+            "name": "pageSize",
+            "required": false,
+            "schema": {
+              "default": "10",
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "integer"
+                    },
+                    "data": {
+                      "properties": {
+                        "list": {
+                          "description": "评论列表",
+                          "items": {},
+                          "type": "array"
+                        },
+                        "total": {
+                          "description": "总数",
+                          "type": "number"
+                        }
+                      },
+                      "type": "object"
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message",
+                    "data"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "ok"
+          }
+        },
+        "summary": "评论列表",
+        "tags": [
+          "posts"
+        ]
+      },
+      "post": {
+        "description": "对帖子发表评论；支持楼中楼（parentCommentId）",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "postId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "content": {
+                    "description": "评论内容（1~1000）",
+                    "type": "string"
+                  },
+                  "parentCommentId": {
+                    "description": "父评论 ID（楼中楼）",
+                    "type": "number"
+                  }
+                },
+                "required": [
+                  "content"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "integer"
+                    },
+                    "data": {
+                      "properties": {
+                        "commentId": {
+                          "description": "评论 ID",
+                          "type": "number"
+                        }
+                      },
+                      "type": "object"
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message",
+                    "data"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "ok"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "发评论（楼中楼）",
+        "tags": [
+          "posts"
+        ]
+      }
+    },
+    "/api/v1/reports": {
+      "post": {
+        "description": "举报帖子/评论/用户，生成待处理审计单",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "detail": {
+                    "description": "详细描述（\u003c=1000）",
+                    "type": "string"
+                  },
+                  "reason": {
+                    "description": "简短原因（1~64）",
+                    "type": "string"
+                  },
+                  "targetId": {
+                    "description": "目标 ID",
+                    "type": "number"
+                  },
+                  "targetType": {
+                    "description": "post/comment/user",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "targetType",
+                  "targetId",
+                  "reason"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "integer"
+                    },
+                    "data": {
+                      "properties": {
+                        "reportId": {
+                          "description": "举报单 ID",
+                          "type": "number"
+                        }
+                      },
+                      "type": "object"
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message",
+                    "data"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "ok"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "提交举报",
+        "tags": [
+          "reports"
+        ]
+      }
+    },
+    "/api/v1/static/{bucket}/{filepath}": {
+      "get": {
+        "description": "访问上传后的文件。public 可匿名访问，private 需要 Bearer token",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "bucket",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "filepath",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "integer"
+                    },
+                    "data": {
+                      "type": "object"
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message",
+                    "data"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "ok"
+          }
+        },
+        "summary": "静态文件访问",
+        "tags": [
+          "static"
+        ]
+      }
+    },
+    "/api/v1/upload": {
+      "post": {
+        "description": "multipart/form-data 上传单文件，返回可访问 URL",
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "properties": {
+                  "bucket": {
+                    "description": "public/private",
+                    "type": "string"
+                  },
+                  "file": {
+                    "description": "文件本体",
+                    "format": "binary",
+                    "type": "string"
+                  },
+                  "scene": {
+                    "description": "业务场景标记",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "file"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "integer"
+                    },
+                    "data": {
+                      "properties": {
+                        "fileId": {
+                          "description": "文件元数据 ID",
+                          "type": "number"
+                        },
+                        "url": {
+                          "description": "静态访问 URL",
+                          "type": "string"
+                        }
+                      },
+                      "type": "object"
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message",
+                    "data"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "ok"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "单文件上传",
+        "tags": [
+          "upload"
+        ]
+      }
+    },
+    "/api/v1/upload/{fileId}": {
+      "delete": {
+        "description": "软删除文件元数据（仅本人或管理员）",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "fileId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "integer"
+                    },
+                    "data": {
+                      "type": "object"
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message",
+                    "data"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "ok"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "删除文件（软删）",
+        "tags": [
+          "upload"
+        ]
+      },
+      "get": {
+        "description": "按 fileId 查询上传文件元数据",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "fileId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "integer"
+                    },
+                    "data": {
+                      "type": "object"
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message",
+                    "data"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "ok"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "查询文件元数据",
+        "tags": [
+          "upload"
+        ]
+      }
+    },
+    "/api/v1/users/login": {
+      "post": {
+        "description": "账号密码登录并签发 JWT",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "account": {
+                    "description": "登录账号",
+                    "type": "string"
+                  },
+                  "password": {
+                    "description": "登录密码",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "account",
+                  "password"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "integer"
+                    },
+                    "data": {
+                      "properties": {
+                        "expiresIn": {
+                          "description": "秒",
+                          "type": "number"
+                        },
+                        "token": {
+                          "description": "JWT",
+                          "type": "string"
+                        },
+                        "tokenType": {
+                          "description": "固定 Bearer",
+                          "type": "string"
+                        },
+                        "user": {
+                          "description": "当前用户摘要",
+                          "type": "object"
+                        }
+                      },
+                      "type": "object"
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message",
+                    "data"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "ok"
+          }
+        },
+        "summary": "用户登录",
+        "tags": [
+          "users"
+        ]
+      }
+    },
+    "/api/v1/users/logout": {
+      "post": {
+        "description": "登出当前会话（本项目不做 token 黑名单）",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "integer"
+                    },
+                    "data": {
+                      "type": "object"
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message",
+                    "data"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "ok"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "用户登出",
+        "tags": [
+          "users"
+        ]
+      }
+    },
+    "/api/v1/users/me": {
+      "get": {
+        "description": "查询当前登录用户信息",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "integer"
+                    },
+                    "data": {
+                      "type": "object"
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message",
+                    "data"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "ok"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "当前用户",
+        "tags": [
+          "users"
+        ]
+      }
+    },
+    "/api/v1/users/me/password": {
+      "put": {
+        "description": "修改当前用户密码",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "newPassword": {
+                    "description": "新密码",
+                    "type": "string"
+                  },
+                  "oldPassword": {
+                    "description": "旧密码",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "oldPassword",
+                  "newPassword"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "integer"
+                    },
+                    "data": {
+                      "type": "object"
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message",
+                    "data"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "ok"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "修改密码",
+        "tags": [
+          "users"
+        ]
+      }
+    },
+    "/api/v1/users/me/profile": {
+      "put": {
+        "description": "修改当前用户资料，支持头像文件上传",
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "properties": {
+                  "avatarFile": {
+                    "description": "新头像文件，multipart/form-data 上传",
+                    "format": "binary",
+                    "type": "string"
+                  },
+                  "bio": {
+                    "description": "简介",
+                    "type": "string"
+                  },
+                  "nickname": {
+                    "description": "昵称",
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          },
+          "required": false
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "integer"
+                    },
+                    "data": {
+                      "type": "object"
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message",
+                    "data"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "ok"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "修改资料",
+        "tags": [
+          "users"
+        ]
+      }
+    },
+    "/api/v1/users/register": {
+      "post": {
+        "description": "账号密码注册，支持头像文件上传",
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "properties": {
+                  "account": {
+                    "description": "登录账号（唯一）",
+                    "type": "string"
+                  },
+                  "avatarFile": {
+                    "description": "头像文件，multipart/form-data 上传",
+                    "format": "binary",
+                    "type": "string"
+                  },
+                  "nickname": {
+                    "description": "昵称，不传则由服务端生成默认昵称",
+                    "type": "string"
+                  },
+                  "password": {
+                    "description": "明文密码（服务端哈希）",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "account",
+                  "password"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "integer"
+                    },
+                    "data": {
+                      "properties": {
+                        "avatarUrl": {
+                          "description": "头像 URL（未上传则为空字符串）",
+                          "type": "string"
+                        },
+                        "userId": {
+                          "description": "新注册用户 ID",
+                          "type": "number"
+                        }
+                      },
+                      "type": "object"
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message",
+                    "data"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "ok"
+          }
+        },
+        "summary": "用户注册",
+        "tags": [
+          "users"
+        ]
+      }
+    },
+    "/api/v1/users/{userId}": {
+      "get": {
+        "description": "获取指定用户公开信息",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "userId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "integer"
+                    },
+                    "data": {
+                      "type": "object"
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message",
+                    "data"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "ok"
+          }
+        },
+        "summary": "用户公开信息",
+        "tags": [
+          "users"
+        ]
+      }
+    },
+    "/health": {
+      "get": {
+        "description": "检查 MySQL/Redis 连通性",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "integer"
+                    },
+                    "data": {
+                      "properties": {
+                        "mysql": {
+                          "description": "MySQL 是否可用",
+                          "type": "boolean"
+                        },
+                        "mysqlError": {
+                          "description": "MySQL 错误（可选）",
+                          "type": "string"
+                        },
+                        "ok": {
+                          "description": "mysql 与 redis 均可用",
+                          "type": "boolean"
+                        },
+                        "redis": {
+                          "description": "Redis 是否可用",
+                          "type": "boolean"
+                        },
+                        "redisError": {
+                          "description": "Redis 错误（可选）",
+                          "type": "string"
+                        }
+                      },
+                      "type": "object"
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message",
+                    "data"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "ok"
+          }
+        },
+        "summary": "健康检查"
+      }
+    },
+    "/users": {
+      "post": {
+        "description": "示例接口：创建用户记录（username 唯一）",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "username": {
+                    "description": "用户名",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "username"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "integer"
+                    },
+                    "data": {
+                      "type": "object"
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message",
+                    "data"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "ok"
+          }
+        },
+        "summary": "创建用户（示例）"
+      }
+    },
+    "/users/{id}": {
+      "get": {
+        "description": "示例接口：按 id 查询用户",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "integer"
+                    },
+                    "data": {
+                      "type": "object"
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message",
+                    "data"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "ok"
+          }
+        },
+        "summary": "查询用户（示例）"
+      }
+    }
+  },
+  "servers": [
+    {
+      "url": "/"
+    }
+  ]
+}

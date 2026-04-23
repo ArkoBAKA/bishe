@@ -1,8 +1,24 @@
-<!--
- * @Date: 2026-04-22 17:31:04
- * @LastEditors: 王文卓 
- * @LastEditTime: 2026-04-22 17:31:21
- * @FilePath: /bishe/vue/README.md
- * @Description: 
--->
-Ve前端服务目录
+# vue3
+
+## Project setup
+```
+npm install
+```
+
+### Compiles and hot-reloads for development
+```
+npm run serve
+```
+
+### Compiles and minifies for production
+```
+npm run build
+```
+
+### Lints and fixes files
+```
+npm run lint
+```
+
+### Customize configuration
+See [Configuration Reference](https://cli.vuejs.org/config/).

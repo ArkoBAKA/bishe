@@ -1,5 +1,5 @@
 import { request } from '@/apis/http'
-import type { PageResult, Post } from '@/types/api'
+import type { CommentItem, PageResult, Post } from '@/types/api'
 
 export const getFeed = (params?: { pageNum?: number; pageSize?: number }) =>
   request<PageResult<Post>>({
@@ -8,3 +8,27 @@ export const getFeed = (params?: { pageNum?: number; pageSize?: number }) =>
     params
   })
 
+export interface CreatePostResponse {
+  postId: number
+  status: string
+}
+
+export const createPost = (payload: { forumId: number; title: string; content: string }) =>
+  request<CreatePostResponse>({
+    url: '/api/v1/posts',
+    method: 'POST',
+    data: payload
+  })
+
+export const getPostDetail = (postId: number | string) =>
+  request<Post>({
+    url: `/api/v1/posts/${postId}`,
+    method: 'GET'
+  })
+
+export const getPostComments = (postId: number | string, params?: { pageNum?: number; pageSize?: number }) =>
+  request<PageResult<CommentItem>>({
+    url: `/api/v1/posts/${postId}/comments`,
+    method: 'GET',
+    params
+  })

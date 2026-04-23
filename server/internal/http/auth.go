@@ -83,13 +83,15 @@ func parseAuthHeader(h, secret string) (AuthInfo, error) {
 	}
 
 	if secret != "" {
-		if claims, err := verifyJWT(token, secret); err == nil {
-			role := claims.Role
-			if role == "" {
-				role = "user"
-			}
-			return AuthInfo{UserID: claims.UserID, Role: role}, nil
+		claims, err := verifyJWT(token, secret)
+		if err != nil {
+			return AuthInfo{}, errors.New("invalid token")
 		}
+		role := claims.Role
+		if role == "" {
+			role = "user"
+		}
+		return AuthInfo{UserID: claims.UserID, Role: role}, nil
 	}
 
 	if token == "admin" {

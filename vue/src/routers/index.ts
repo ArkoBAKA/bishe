@@ -37,8 +37,20 @@ const routes: RouteRecordRaw[] = [
         path: 'login',
         name: 'mobile-login',
         component: () => import('@/views/mobile/auth/LoginPage.vue')
+      },
+      {
+        path: 'register',
+        name: 'mobile-register',
+        component: () => import('@/views/mobile/auth/LoginPage.vue'),
+        meta: { register: true }
       }
     ]
+  },
+  {
+    path: '/admin/login',
+    name: 'admin-login',
+    component: () => import('@/views/mobile/auth/LoginPage.vue'),
+    meta: { adminLogin: true }
   },
   {
     path: '/admin',
@@ -64,6 +76,21 @@ const routes: RouteRecordRaw[] = [
         path: 'posts/pending',
         name: 'admin-posts-pending',
         component: () => import('@/views/admin/posts/PendingPostsPage.vue')
+      },
+      {
+        path: 'comments/review',
+        name: 'admin-comments-review',
+        component: () => import('@/views/admin/comments/CommentsReviewPage.vue')
+      },
+      {
+        path: 'users',
+        name: 'admin-users',
+        component: () => import('@/views/admin/users/UsersPage.vue')
+      },
+      {
+        path: 'notifications',
+        name: 'admin-notifications',
+        component: () => import('@/views/admin/notifications/NotificationsPage.vue')
       }
     ]
   },

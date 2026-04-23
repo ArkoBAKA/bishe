@@ -1,6 +1,5 @@
 import axios, { type AxiosError, type AxiosRequestConfig, type AxiosResponse, type InternalAxiosRequestConfig } from 'axios'
 import { clearAuth, getToken } from '@/utils/storage'
-import type { ApiResponse } from '@/types/api'
 
 const http = axios.create({
   baseURL: import.meta.env.VITE_API_BASE || '',
@@ -18,11 +17,12 @@ http.interceptors.request.use((config: InternalAxiosRequestConfig) => {
 
 http.interceptors.response.use(
   (response: AxiosResponse) => response,
-  (error: AxiosError<any>) => {
+  (error: AxiosError<unknown>) => {
     const status = error.response?.status
     if (status === 401) clearAuth()
+    const data = error.response?.data as { message?: string } | undefined
     const message =
-      error.response?.data?.message ||
+      data?.message ||
       error.message ||
       '请求失败'
     return Promise.reject(new Error(message))
@@ -30,10 +30,24 @@ http.interceptors.response.use(
 )
 
 export const request = async <T>(config: AxiosRequestConfig): Promise<T> => {
-  const response = await http.request<ApiResponse<T>>(config)
-  const payload = response.data
-  if (payload && typeof payload.code === 'number' && payload.code !== 0) {
-    throw new Error(payload.message || '请求失败')
+  const response = await http.request<unknown>(config)
+  const payload = response.data as unknown
+
+  if (payload && typeof payload === 'object') {
+    const p = payload as Record<string, unknown>
+    if ('code' in p) {
+      const codeValue = p.code
+      const code = typeof codeValue === 'number' ? codeValue : Number(codeValue)
+      if (!Number.isFinite(code)) return (p.data ?? payload) as T
+      if (code !== 0) {
+        const message = typeof p.message === 'string' ? p.message : '请求失败'
+        throw new Error(message)
+      }
+      return (p.data ?? null) as T
+    }
+
+    if ('data' in p) return (p.data ?? null) as T
   }
-  return (payload?.data ?? null) as T
+
+  return payload as T
 }

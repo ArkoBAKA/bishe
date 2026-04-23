@@ -1,7 +1,7 @@
 /*
  * @Date: 2026-04-23 14:43:56
  * @LastEditors: ArongWang 3312428832@qq.com
- * @LastEditTime: 2026-04-23 14:44:51
+ * @LastEditTime: 2026-04-23 15:29:06
  * @FilePath: /vue/src/types/api.ts
  * @Description: 
  */
@@ -28,6 +28,7 @@ export interface Forum {
     name: string
     description?: string
     coverUrl?: string
+    followersCount?: number
 }
 
 export interface Post {
@@ -37,6 +38,12 @@ export interface Post {
     content?: string
     status?: string
     createdAt?: string
+    updatedAt?: string
+    author?: UserSummary
+    forum?: Pick<Forum, 'forumId' | 'name' | 'coverUrl'>
+    viewCount?: number
+    likeCount?: number
+    commentCount?: number
 }
 
 export interface Follow {
@@ -54,3 +61,11 @@ export interface NotificationItem {
     content?: string
 }
 
+export interface CommentItem {
+    commentId: number
+    postId?: number
+    parentCommentId?: number
+    content: string
+    createdAt?: string
+    author?: UserSummary
+}

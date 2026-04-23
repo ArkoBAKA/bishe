@@ -212,8 +212,12 @@
                   {{ p.content }}
                 </div>
                 <div class="post-actions">
-                  <button class="btn" type="button" @click="openComments(p)">
-                    评论
+                  <button
+                    class="btn"
+                    type="button"
+                    @click="toggleComments(p.postId)"
+                  >
+                    {{ isCommentsExpanded(p.postId) ? "收起评论" : "评论" }}
                   </button>
                   <button
                     class="btn"
@@ -222,6 +226,55 @@
                   >
                     分享
                   </button>
+                </div>
+
+                <div v-if="isCommentsExpanded(p.postId)" class="comments-box">
+                  <div v-if="isCommentsLoading(p.postId)" class="muted pad-sm">
+                    加载中...
+                  </div>
+                  <div
+                    v-else-if="(commentsByPostId[p.postId] || []).length === 0"
+                    class="muted pad-sm"
+                  >
+                    暂无评论
+                  </div>
+                  <div v-else class="comment-thread">
+                    <div
+                      v-for="it in commentThread(p.postId)"
+                      :key="it.comment.commentId"
+                      class="comment-row"
+                      :style="{ marginLeft: `${it.depth * 16}px` }"
+                    >
+                      <div class="avatar small placeholder">
+                        {{ (it.comment.author?.nickname || "U").slice(0, 1) }}
+                      </div>
+                      <div class="comment-body">
+                        <div class="comment-head">
+                          <span class="comment-author">{{
+                            it.comment.author?.nickname ||
+                            `用户${it.comment.author?.userId || ""}` ||
+                            "匿名"
+                          }}</span>
+                          <span v-if="it.replyTo" class="reply-to"
+                            >回复
+                            {{
+                              it.replyTo.author?.nickname ||
+                              `用户${it.replyTo.author?.userId || ""}` ||
+                              "匿名"
+                            }}</span
+                          >
+                          <span
+                            v-if="it.comment.createdAt"
+                            class="comment-time"
+                            >{{ formatTime(it.comment.createdAt) }}</span
+                          >
+                        </div>
+                        <div class="comment-content">
+                          {{ it.comment.content }}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </article>
             </div>
@@ -282,39 +335,6 @@
         </aside>
       </div>
     </main>
-
-    <div v-if="commentsOpen" class="drawer-mask" @click.self="closeComments">
-      <div class="drawer">
-        <div class="drawer-head">
-          <div class="drawer-title">评论</div>
-          <button class="link" type="button" @click="closeComments">
-            关闭
-          </button>
-        </div>
-        <div v-if="commentsLoading" class="muted pad">加载中...</div>
-        <div v-else-if="comments.length === 0" class="muted pad">暂无评论</div>
-        <div v-else class="comment-list">
-          <div v-for="c in comments" :key="c.commentId" class="comment-item">
-            <div class="avatar small placeholder">
-              {{ (c.author?.nickname || "U").slice(0, 1) }}
-            </div>
-            <div class="comment-body">
-              <div class="comment-head">
-                <span class="comment-author">{{
-                  c.author?.nickname ||
-                  `用户${c.author?.userId || ""}` ||
-                  "匿名"
-                }}</span>
-                <span v-if="c.createdAt" class="comment-time">{{
-                  formatTime(c.createdAt)
-                }}</span>
-              </div>
-              <div class="comment-content">{{ c.content }}</div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
   </div>
 </template>
 
@@ -337,9 +357,14 @@ const loading = ref(false);
 const isFollowed = ref(false);
 const activeTab = ref<"latest" | "hot" | "media" | "help">("latest");
 
-const commentsOpen = ref(false);
-const commentsLoading = ref(false);
-const comments = ref<CommentItem[]>([]);
+type CommentThreadItem = {
+  comment: CommentItem;
+  depth: number;
+  replyTo?: CommentItem;
+};
+const commentsByPostId = ref<Record<number, CommentItem[]>>({});
+const commentsLoadingByPostId = ref<Record<number, boolean>>({});
+const commentsExpandedByPostId = ref<Record<number, boolean>>({});
 
 const formatTime = (value: string) => {
   const d = new Date(value);
@@ -350,6 +375,70 @@ const formatTime = (value: string) => {
   const hh = String(d.getHours()).padStart(2, "0");
   const mi = String(d.getMinutes()).padStart(2, "0");
   return `${yy}-${mm}-${dd} ${hh}:${mi}`;
+};
+
+const isCommentsExpanded = (postId: number) =>
+  !!commentsExpandedByPostId.value[postId];
+const isCommentsLoading = (postId: number) =>
+  !!commentsLoadingByPostId.value[postId];
+
+const buildCommentThread = (items: CommentItem[]) => {
+  const byId = new Map<number, CommentItem>();
+  const children = new Map<number, CommentItem[]>();
+  for (const c of items) {
+    byId.set(c.commentId, c);
+    children.set(c.commentId, []);
+  }
+  const roots: CommentItem[] = [];
+  for (const c of items) {
+    const pid = c.parentCommentId || 0;
+    if (pid && byId.has(pid)) {
+      children.get(pid)!.push(c);
+    } else {
+      roots.push(c);
+    }
+  }
+  const sortByTimeAsc = (a: CommentItem, b: CommentItem) => {
+    const at = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+    const bt = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+    return at - bt;
+  };
+  roots.sort(sortByTimeAsc);
+  for (const list of children.values()) list.sort(sortByTimeAsc);
+
+  const out: CommentThreadItem[] = [];
+  const dfs = (node: CommentItem, depth: number, replyTo?: CommentItem) => {
+    out.push({ comment: node, depth, replyTo });
+    const kids = children.get(node.commentId) || [];
+    for (const k of kids) dfs(k, depth + 1, node);
+  };
+  for (const r of roots) dfs(r, 0);
+  return out;
+};
+
+const commentThread = (postId: number) => {
+  const list = commentsByPostId.value[postId] || [];
+  return buildCommentThread(list);
+};
+
+const ensureCommentsLoaded = async (postId: number) => {
+  if (commentsByPostId.value[postId]) return;
+  commentsLoadingByPostId.value[postId] = true;
+  try {
+    const data = await feedApi.getPostComments(postId, {
+      pageNum: 1,
+      pageSize: 50,
+    });
+    commentsByPostId.value[postId] = data.list || [];
+  } finally {
+    commentsLoadingByPostId.value[postId] = false;
+  }
+};
+
+const toggleComments = async (postId: number) => {
+  const next = !isCommentsExpanded(postId);
+  commentsExpandedByPostId.value[postId] = next;
+  if (next) await ensureCommentsLoaded(postId);
 };
 
 const formatTimeShort = (value: string) => {
@@ -560,26 +649,6 @@ const toggleFollow = async () => {
     await followsApi.follow({ targetType: "forum", targetId: forumId });
   }
   await loadFollowState();
-};
-
-const openComments = async (post: Post) => {
-  commentsOpen.value = true;
-  commentsLoading.value = true;
-  comments.value = [];
-  try {
-    const data = await feedApi.getPostComments(post.postId, {
-      pageNum: 1,
-      pageSize: 30,
-    });
-    comments.value = data.list || [];
-  } finally {
-    commentsLoading.value = false;
-  }
-};
-
-const closeComments = () => {
-  commentsOpen.value = false;
-  comments.value = [];
 };
 
 onMounted(async () => {
@@ -1002,6 +1071,64 @@ onMounted(async () => {
   display: flex;
   gap: 10px;
   justify-content: flex-end;
+}
+
+.comments-box {
+  margin-top: 12px;
+  border-top: 1px solid #eef0f5;
+  padding-top: 12px;
+}
+
+.pad-sm {
+  padding: 10px 0 2px;
+}
+
+.comment-thread {
+  display: grid;
+  gap: 10px;
+}
+
+.comment-row {
+  display: grid;
+  grid-template-columns: 34px 1fr;
+  gap: 10px;
+  align-items: start;
+}
+
+.comment-body {
+  border: 1px solid #eef0f5;
+  background: #f8fafc;
+  border-radius: 12px;
+  padding: 10px 12px;
+}
+
+.comment-head {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.comment-author {
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.reply-to {
+  font-size: 12px;
+  color: #64748b;
+}
+
+.comment-time {
+  font-size: 12px;
+  color: #94a3b8;
+}
+
+.comment-content {
+  margin-top: 6px;
+  color: #334155;
+  line-height: 1.7;
+  white-space: pre-wrap;
 }
 
 .btn {

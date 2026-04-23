@@ -66,7 +66,7 @@
       <aside class="left">
         <div class="panel">
           <div class="panel-title">
-            {{ auth.isAuthed ? "我的关注" : "全部贴吧" }}
+            贴吧列表
           </div>
           <div v-if="forumsLoading" class="muted">加载中...</div>
           <div v-else class="forum-list">
@@ -77,16 +77,27 @@
               type="button"
               @click="toForum(f.forumId)"
             >
-              <div class="forum-name">{{ f.name }}</div>
-              <div class="forum-sub">
-                {{ f.description || `ID: ${f.forumId}` }}
+              <div class="forum-left">
+                <div class="forum-icon">
+                  <img
+                    v-if="f.coverUrl"
+                    class="forum-icon-img"
+                    :src="f.coverUrl"
+                    alt="cover"
+                  />
+                  <div v-else class="forum-icon-fallback">
+                    {{ (f.name || "吧").slice(0, 1) }}
+                  </div>
+                </div>
+                <div class="forum-text">
+                  <div class="forum-name">{{ f.name }}</div>
+                  <div class="forum-sub">
+                    {{ f.description || `ID: ${f.forumId}` }}
+                  </div>
+                </div>
               </div>
               <div class="forum-ops" @click.stop>
-                <button
-                  class="follow"
-                  type="button"
-                  @click="toggleFollow(f.forumId)"
-                >
+                <button class="follow" type="button" @click="toggleFollow(f.forumId)">
                   {{ isFollowed(f.forumId) ? "已关注" : "关注" }}
                 </button>
               </div>
@@ -205,8 +216,12 @@
               <div v-if="p.content" class="post-content">{{ p.content }}</div>
 
               <div class="post-foot">
-                <button class="post-btn" type="button" @click="openComments(p)">
-                  评论<span v-if="typeof p.commentCount === 'number'">
+                <button class="post-btn" type="button" @click="toggleComments(p.postId)">
+                  {{
+                    isCommentsExpanded(p.postId)
+                      ? "收起评论"
+                      : "评论"
+                  }}<span v-if="typeof p.commentCount === 'number'">
                     {{ p.commentCount }}</span
                   >
                 </button>
@@ -224,6 +239,50 @@
                   <span v-if="typeof p.likeCount === 'number'"
                     >点赞 {{ p.likeCount }}</span
                   >
+                </div>
+              </div>
+
+              <div v-if="isCommentsExpanded(p.postId)" class="comments-box">
+                <div v-if="isCommentsLoading(p.postId)" class="muted pad-sm">
+                  加载中...
+                </div>
+                <div
+                  v-else-if="(commentsByPostId[p.postId] || []).length === 0"
+                  class="muted pad-sm"
+                >
+                  暂无评论
+                </div>
+                <div v-else class="comment-thread">
+                  <div
+                    v-for="it in commentThread(p.postId)"
+                    :key="it.comment.commentId"
+                    class="comment-row"
+                    :style="{ marginLeft: `${it.depth * 16}px` }"
+                  >
+                    <div class="avatar small placeholder">
+                      {{ (it.comment.author?.nickname || "U").slice(0, 1) }}
+                    </div>
+                    <div class="comment-body">
+                      <div class="comment-head">
+                        <span class="comment-author">{{
+                          it.comment.author?.nickname ||
+                          `用户${it.comment.author?.userId || ""}` ||
+                          "匿名"
+                        }}</span>
+                        <span v-if="it.replyTo" class="reply-to"
+                          >回复 {{
+                            it.replyTo.author?.nickname ||
+                            `用户${it.replyTo.author?.userId || ""}` ||
+                            "匿名"
+                          }}</span
+                        >
+                        <span v-if="it.comment.createdAt" class="comment-time">{{
+                          formatTime(it.comment.createdAt)
+                        }}</span>
+                      </div>
+                      <div class="comment-content">{{ it.comment.content }}</div>
+                    </div>
+                  </div>
                 </div>
               </div>
             </article>
@@ -328,39 +387,6 @@
       </div>
     </div>
 
-    <div v-if="commentsOpen" class="drawer-mask" @click.self="closeComments">
-      <div class="drawer">
-        <div class="drawer-head">
-          <div class="drawer-title">评论</div>
-          <button class="link" type="button" @click="closeComments">
-            关闭
-          </button>
-        </div>
-        <div v-if="commentsLoading" class="muted pad">加载中...</div>
-        <div v-else-if="comments.length === 0" class="muted pad">暂无评论</div>
-        <div v-else class="comment-list">
-          <div v-for="c in comments" :key="c.commentId" class="comment-item">
-            <div class="avatar small placeholder">
-              {{ (c.author?.nickname || "U").slice(0, 1) }}
-            </div>
-            <div class="comment-body">
-              <div class="comment-head">
-                <span class="comment-author">{{
-                  c.author?.nickname ||
-                  `用户${c.author?.userId || ""}` ||
-                  "匿名"
-                }}</span>
-                <span v-if="c.createdAt" class="comment-time">{{
-                  formatTime(c.createdAt)
-                }}</span>
-              </div>
-              <div class="comment-content">{{ c.content }}</div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
     <div v-if="notifyOpen" class="drawer-mask" @click.self="notifyOpen = false">
       <div class="drawer">
         <div class="drawer-head">
@@ -425,10 +451,10 @@ const loginPassword = ref("");
 const loginLoading = ref(false);
 const loginError = ref("");
 
-const commentsOpen = ref(false);
-const commentsLoading = ref(false);
-const comments = ref<CommentItem[]>([]);
-const currentPostId = ref<number | null>(null);
+type CommentThreadItem = { comment: CommentItem; depth: number; replyTo?: CommentItem };
+const commentsByPostId = ref<Record<number, CommentItem[]>>({});
+const commentsLoadingByPostId = ref<Record<number, boolean>>({});
+const commentsExpandedByPostId = ref<Record<number, boolean>>({});
 
 const notifyOpen = ref(false);
 const notifyLoading = ref(false);
@@ -591,26 +617,63 @@ const toForum = (forumId: number | string) => {
   router.push({ name: "mobile-forum", params: { id: String(forumId) } });
 };
 
-const openComments = async (post: Post) => {
-  commentsOpen.value = true;
-  commentsLoading.value = true;
-  comments.value = [];
-  currentPostId.value = post.postId;
+const isCommentsExpanded = (postId: number) => !!commentsExpandedByPostId.value[postId];
+const isCommentsLoading = (postId: number) => !!commentsLoadingByPostId.value[postId];
+
+const buildCommentThread = (items: CommentItem[]) => {
+  const byId = new Map<number, CommentItem>();
+  const children = new Map<number, CommentItem[]>();
+  for (const c of items) {
+    byId.set(c.commentId, c);
+    children.set(c.commentId, []);
+  }
+  const roots: CommentItem[] = [];
+  for (const c of items) {
+    const pid = c.parentCommentId || 0;
+    if (pid && byId.has(pid)) {
+      children.get(pid)!.push(c);
+    } else {
+      roots.push(c);
+    }
+  }
+  const sortByTimeAsc = (a: CommentItem, b: CommentItem) => {
+    const at = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+    const bt = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+    return at - bt;
+  };
+  roots.sort(sortByTimeAsc);
+  for (const list of children.values()) list.sort(sortByTimeAsc);
+
+  const out: CommentThreadItem[] = [];
+  const dfs = (node: CommentItem, depth: number, replyTo?: CommentItem) => {
+    out.push({ comment: node, depth, replyTo });
+    const kids = children.get(node.commentId) || [];
+    for (const k of kids) dfs(k, depth + 1, node);
+  };
+  for (const r of roots) dfs(r, 0);
+  return out;
+};
+
+const commentThread = (postId: number) => {
+  const list = commentsByPostId.value[postId] || [];
+  return buildCommentThread(list);
+};
+
+const ensureCommentsLoaded = async (postId: number) => {
+  if (commentsByPostId.value[postId]) return;
+  commentsLoadingByPostId.value[postId] = true;
   try {
-    const data = await feedApi.getPostComments(post.postId, {
-      pageNum: 1,
-      pageSize: 30,
-    });
-    comments.value = data.list || [];
+    const data = await feedApi.getPostComments(postId, { pageNum: 1, pageSize: 50 });
+    commentsByPostId.value[postId] = data.list || [];
   } finally {
-    commentsLoading.value = false;
+    commentsLoadingByPostId.value[postId] = false;
   }
 };
 
-const closeComments = () => {
-  commentsOpen.value = false;
-  comments.value = [];
-  currentPostId.value = null;
+const toggleComments = async (postId: number) => {
+  const next = !isCommentsExpanded(postId);
+  commentsExpandedByPostId.value[postId] = next;
+  if (next) await ensureCommentsLoaded(postId);
 };
 
 const loadNotificationsIfOpen = async () => {
@@ -794,12 +857,14 @@ onMounted(async () => {
   border: 1px solid #eef0f5;
   border-radius: 16px;
   box-shadow: 0 6px 18px rgba(15, 23, 42, 0.03);
+  overflow: hidden;
 }
 
 .panel-title {
-  font-weight: 700;
-  padding: 14px 14px 10px;
+  font-weight: 900;
+  padding: 14px 14px 12px;
   color: #0f172a;
+  border-bottom: 1px solid #f1f5f9;
 }
 
 .panel-head {
@@ -807,6 +872,7 @@ onMounted(async () => {
   align-items: center;
   justify-content: space-between;
   padding: 14px 14px 10px;
+  border-bottom: 1px solid #f1f5f9;
 }
 
 .panel-footer {
@@ -842,17 +908,69 @@ onMounted(async () => {
   background: #fff;
   cursor: pointer;
   text-align: left;
+  transition: box-shadow 0.2s ease, border-color 0.2s ease,
+    transform 0.2s ease;
+}
+
+.forum-item:hover {
+  border-color: rgba(79, 70, 229, 0.22);
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.06);
+  transform: translateY(-1px);
+}
+
+.forum-left {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  min-width: 0;
+}
+
+.forum-icon {
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid #e2e8f0;
+  background: #fff;
+  flex: 0 0 auto;
+}
+
+.forum-icon-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.forum-icon-fallback {
+  width: 100%;
+  height: 100%;
+  display: grid;
+  place-items: center;
+  background: #eef2ff;
+  color: #4f46e5;
+  font-weight: 900;
+}
+
+.forum-text {
+  min-width: 0;
 }
 
 .forum-name {
   font-weight: 600;
   color: #0f172a;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .forum-sub {
   margin-top: 2px;
   font-size: 12px;
   color: #64748b;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .forum-ops {
@@ -868,6 +986,7 @@ onMounted(async () => {
   background: #fff;
   border-radius: 999px;
   cursor: pointer;
+  font-weight: 800;
 }
 
 .center {
@@ -936,6 +1055,107 @@ onMounted(async () => {
   border-radius: 14px;
   padding: 14px;
   background: #fff;
+  transition: box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.post-card:hover {
+  border-color: rgba(79, 70, 229, 0.18);
+  box-shadow: 0 14px 32px rgba(15, 23, 42, 0.06);
+}
+
+.comments-box {
+  margin-top: 12px;
+  border-top: 1px solid #eef0f5;
+  padding-top: 12px;
+}
+
+.pad-sm {
+  padding: 10px 0 2px;
+}
+
+.comment-thread {
+  display: grid;
+  gap: 10px;
+}
+
+.comment-row {
+  display: grid;
+  grid-template-columns: 34px 1fr;
+  gap: 10px;
+  align-items: start;
+}
+
+.comment-body {
+  border: 1px solid #eef0f5;
+  background: linear-gradient(180deg, #f8fafc 0%, #ffffff 100%);
+  border-radius: 12px;
+  padding: 10px 12px;
+}
+
+.comment-head {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.comment-author {
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.reply-to {
+  font-size: 12px;
+  color: #64748b;
+}
+
+.comment-time {
+  font-size: 12px;
+  color: #94a3b8;
+}
+
+.comment-content {
+  margin-top: 6px;
+  color: #334155;
+  line-height: 1.7;
+  white-space: pre-wrap;
+}
+
+@media (max-width: 1100px) {
+  .layout {
+    grid-template-columns: 240px 1fr;
+    grid-template-areas:
+      "left center"
+      "right right";
+  }
+  .left {
+    grid-area: left;
+  }
+  .center {
+    grid-area: center;
+  }
+  .right {
+    grid-area: right;
+  }
+}
+
+@media (max-width: 820px) {
+  .layout {
+    grid-template-columns: 1fr;
+    grid-template-areas:
+      "center"
+      "left"
+      "right";
+  }
+  .topbar {
+    grid-template-columns: 1fr;
+    height: auto;
+    padding: 10px 12px;
+    gap: 10px;
+  }
+  .actions {
+    justify-content: space-between;
+  }
 }
 
 .post-author {
@@ -999,6 +1219,7 @@ onMounted(async () => {
   background: #fff;
   border-radius: 10px;
   cursor: pointer;
+  font-weight: 800;
 }
 
 .post-metrics {

@@ -16,6 +16,7 @@ type Config struct {
 	MySQL  MySQLConfig  `yaml:"mysql"`
 	Redis  RedisConfig  `yaml:"redis"`
 	Auth   AuthConfig   `yaml:"auth"`
+	Admin  AdminConfig  `yaml:"admin"`
 	Upload UploadConfig `yaml:"upload"`
 }
 
@@ -49,6 +50,13 @@ type AuthConfig struct {
 	TokenTTLSeconds int    `yaml:"tokenTTLSeconds"`
 }
 
+type AdminConfig struct {
+	Account       string `yaml:"account"`
+	Password      string `yaml:"password"`
+	Nickname      string `yaml:"nickname"`
+	ResetPassword bool   `yaml:"resetPassword"`
+}
+
 type UploadConfig struct {
 	BaseDir      string   `yaml:"baseDir"`
 	MaxFileMB    int      `yaml:"maxFileMB"`
@@ -62,6 +70,7 @@ type fileConfig struct {
 	MySQL  fileMySQLConfig  `yaml:"mysql"`
 	Redis  fileRedisConfig  `yaml:"redis"`
 	Auth   fileAuthConfig   `yaml:"auth"`
+	Admin  fileAdminConfig  `yaml:"admin"`
 	Upload fileUploadConfig `yaml:"upload"`
 }
 
@@ -93,6 +102,13 @@ type fileRedisConfig struct {
 type fileAuthConfig struct {
 	JWTSecret       *string `yaml:"jwtSecret"`
 	TokenTTLSeconds *int    `yaml:"tokenTTLSeconds"`
+}
+
+type fileAdminConfig struct {
+	Account       *string `yaml:"account"`
+	Password      *string `yaml:"password"`
+	Nickname      *string `yaml:"nickname"`
+	ResetPassword *bool   `yaml:"resetPassword"`
 }
 
 type fileUploadConfig struct {
@@ -206,6 +222,12 @@ func defaultConfig() Config {
 			JWTSecret:       "dev-secret-change-me",
 			TokenTTLSeconds: 7200,
 		},
+		Admin: AdminConfig{
+			Account:       "",
+			Password:      "",
+			Nickname:      "管理员",
+			ResetPassword: false,
+		},
 		Upload: UploadConfig{
 			BaseDir:      "data/uploads",
 			MaxFileMB:    50,
@@ -288,6 +310,19 @@ func mergeConfig(base Config, incoming fileConfig) Config {
 		base.Auth.TokenTTLSeconds = *incoming.Auth.TokenTTLSeconds
 	}
 
+	if incoming.Admin.Account != nil {
+		base.Admin.Account = *incoming.Admin.Account
+	}
+	if incoming.Admin.Password != nil {
+		base.Admin.Password = *incoming.Admin.Password
+	}
+	if incoming.Admin.Nickname != nil {
+		base.Admin.Nickname = *incoming.Admin.Nickname
+	}
+	if incoming.Admin.ResetPassword != nil {
+		base.Admin.ResetPassword = *incoming.Admin.ResetPassword
+	}
+
 	if incoming.Upload.BaseDir != nil {
 		base.Upload.BaseDir = *incoming.Upload.BaseDir
 	}
@@ -361,6 +396,19 @@ func applyEnvOverrides(cfg *Config) {
 	}
 	if v := getEnv("TOKEN_TTL_SECONDS", ""); v != "" {
 		cfg.Auth.TokenTTLSeconds = getEnvInt("TOKEN_TTL_SECONDS", cfg.Auth.TokenTTLSeconds)
+	}
+
+	if v := getEnv("ADMIN_ACCOUNT", ""); v != "" {
+		cfg.Admin.Account = v
+	}
+	if v := getEnv("ADMIN_PASSWORD", ""); v != "" {
+		cfg.Admin.Password = v
+	}
+	if v := getEnv("ADMIN_NICKNAME", ""); v != "" {
+		cfg.Admin.Nickname = v
+	}
+	if v := getEnv("ADMIN_RESET_PASSWORD", ""); v != "" {
+		cfg.Admin.ResetPassword = getEnvBool("ADMIN_RESET_PASSWORD", cfg.Admin.ResetPassword)
 	}
 
 	if v := getEnv("UPLOAD_BASE_DIR", ""); v != "" {

@@ -245,7 +245,9 @@ func listVisiblePostsHandler(deps Deps) gin.HandlerFunc {
 		ForumID      uint64    `gorm:"column:forum_id"`
 		ForumName    string    `gorm:"column:forum_name"`
 		Title        string    `gorm:"column:title"`
+		Content      string    `gorm:"column:content"`
 		AuthorID     uint64    `gorm:"column:author_id"`
+		Status       string    `gorm:"column:status"`
 		LikeCount    int64     `gorm:"column:like_count"`
 		CommentCount int64     `gorm:"column:comment_count"`
 		ViewCount    int64     `gorm:"column:view_count"`
@@ -278,7 +280,9 @@ func listVisiblePostsHandler(deps Deps) gin.HandlerFunc {
 			"posts.forum_id",
 			"forums.name AS forum_name",
 			"posts.title",
+			"posts.content",
 			"posts.author_id",
+			"posts.status",
 			"posts.like_count",
 			"posts.comment_count",
 			"posts.view_count",
@@ -299,7 +303,9 @@ func listVisiblePostsHandler(deps Deps) gin.HandlerFunc {
 				"forumId":      p.ForumID,
 				"forumName":    p.ForumName,
 				"title":        p.Title,
+				"content":      p.Content,
 				"authorId":     p.AuthorID,
+				"status":       p.Status,
 				"likeCount":    p.LikeCount,
 				"commentCount": p.CommentCount,
 				"viewCount":    p.ViewCount,

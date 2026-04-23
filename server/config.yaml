@@ -21,6 +21,11 @@ redis:
 auth:
   jwtSecret: "dev-secret-change-me"
   tokenTTLSeconds: 7200
+admin:
+  account: "admin"
+  password: "admin123456"
+  nickname: "管理员"
+  resetPassword: true
 upload:
   baseDir: "data/uploads"
   maxFileMB: 50

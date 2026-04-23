@@ -10,7 +10,6 @@ import (
 	"os"
 	"os/signal"
 	"path/filepath"
-	"strconv"
 	"strings"
 	"syscall"
 	"time"
@@ -28,6 +27,7 @@ func main() {
 	genDoc := flag.Bool("gen-doc", false, "")
 	docOut := flag.String("doc-out", "", "")
 	docFormat := flag.String("doc-format", "md", "")
+	seedAdmin := flag.Bool("seed-admin", false, "")
 	flag.Parse()
 
 	cfg := config.Load()
@@ -91,6 +91,17 @@ func main() {
 		log.Fatal(err)
 	}
 
+	if *seedAdmin {
+		if err := db.AutoMigrate(&model.User{}); err != nil {
+			log.Fatal(err)
+		}
+		if err := ensureAdminAccount(db, cfg); err != nil {
+			log.Fatal(err)
+		}
+		_ = sqlDB.Close()
+		return
+	}
+
 	if cfg.App.AutoMigrate {
 		if err := db.AutoMigrate(
 			&model.User{},
@@ -108,7 +119,7 @@ func main() {
 		}
 	}
 
-	if err := ensureAdminAccount(db); err != nil {
+	if err := ensureAdminAccount(db, cfg); err != nil {
 		log.Fatal(err)
 	}
 
@@ -146,24 +157,21 @@ func main() {
 	_ = sqlDB.Close()
 }
 
-func ensureAdminAccount(db *gorm.DB) error {
-	account := strings.TrimSpace(os.Getenv("ADMIN_ACCOUNT"))
-	password := os.Getenv("ADMIN_PASSWORD")
+func ensureAdminAccount(db *gorm.DB, cfg config.Config) error {
+	account := strings.TrimSpace(cfg.Admin.Account)
+	password := cfg.Admin.Password
 	if account == "" || password == "" {
 		return nil
 	}
 
-	nickname := strings.TrimSpace(os.Getenv("ADMIN_NICKNAME"))
+	nickname := strings.TrimSpace(cfg.Admin.Nickname)
 	if nickname == "" {
 		nickname = "管理员"
 	}
 
-	resetPassword := false
-	if v := strings.TrimSpace(os.Getenv("ADMIN_RESET_PASSWORD")); v != "" {
-		if b, err := strconv.ParseBool(v); err == nil {
-			resetPassword = b
-		}
-	}
+	resetPassword := cfg.Admin.ResetPassword
+
+	log.Printf("admin seed enabled: account=%s resetPassword=%v", account, resetPassword)
 
 	var u model.User
 	err := db.Where("account = ?", account).First(&u).Error
@@ -187,7 +195,11 @@ func ensureAdminAccount(db *gorm.DB) error {
 			Role:         "admin",
 			Status:       "normal",
 		}
-		return db.Create(&u).Error
+		if err := db.Create(&u).Error; err != nil {
+			return err
+		}
+		log.Printf("admin seed created: account=%s userId=%d", account, u.ID)
+		return nil
 	}
 
 	updates := map[string]any{}
@@ -201,7 +213,12 @@ func ensureAdminAccount(db *gorm.DB) error {
 		updates["password_hash"] = string(hash)
 	}
 	if len(updates) == 0 {
+		log.Printf("admin seed skipped: account=%s userId=%d", account, u.ID)
 		return nil
 	}
-	return db.Model(&model.User{}).Where("id = ?", u.ID).Updates(updates).Error
+	if err := db.Model(&model.User{}).Where("id = ?", u.ID).Updates(updates).Error; err != nil {
+		return err
+	}
+	log.Printf("admin seed updated: account=%s userId=%d", account, u.ID)
+	return nil
 }

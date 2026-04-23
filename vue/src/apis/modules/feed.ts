@@ -1,9 +1,23 @@
+/*
+ * @Date: 2026-04-23 14:45:27
+ * @LastEditors: ArongWang 3312428832@qq.com
+ * @LastEditTime: 2026-04-23 17:04:14
+ * @FilePath: /vue/src/apis/modules/feed.ts
+ * @Description: 
+ */
 import { request } from '@/apis/http'
 import type { CommentItem, PageResult, Post } from '@/types/api'
 
 export const getFeed = (params?: { pageNum?: number; pageSize?: number }) =>
   request<PageResult<Post>>({
     url: '/api/v1/feed',
+    method: 'GET',
+    params
+  })
+
+export const getPublicPosts = (params?: { pageNum?: number; pageSize?: number }) =>
+  request<PageResult<Post>>({
+    url: '/api/v1/posts',
     method: 'GET',
     params
   })

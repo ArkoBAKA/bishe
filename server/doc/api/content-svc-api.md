@@ -210,7 +210,7 @@
 - **Path**: `/api/v1/posts`
 - **Auth**: 不需要
 - **角色**: `guest`
-- **说明**: 分页查询全站审核通过（`visible`）的帖子列表，按创建时间倒序（最新在前）；每条帖子返回所属贴吧信息（`forumId` + `forumName`）
+- **说明**: 分页查询全站审核通过（`visible`）的帖子列表，按创建时间倒序（最新在前）；每条帖子返回帖子详情字段 + 所属贴吧信息（`forumId` + `forumName`）
 
 ### 请求参数
 
@@ -234,7 +234,9 @@
         "forumId": 10001,
         "forumName": "Golang",
         "title": "Hello",
+        "content": "正文",
         "authorId": 10001,
+        "status": "visible",
         "likeCount": 0,
         "commentCount": 0,
         "viewCount": 0,

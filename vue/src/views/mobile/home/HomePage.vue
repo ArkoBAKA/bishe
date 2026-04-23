@@ -556,53 +556,19 @@ const loadFollows = async () => {
   }
 };
 
-const loadGuestLatestPosts = async () => {
-  const forumData = await forumsApi.getForums({
-    pageNum: 1,
-    pageSize: 6,
-    keyword: keyword.value.trim() || undefined,
-  });
-  const topForums = forumData.list || [];
-  const pages = await Promise.all(
-    topForums.map(async (f) => {
-      try {
-        const postsData = await forumsApi.getForumPosts(f.forumId, {
-          pageNum: 1,
-          pageSize: 5,
-        });
-        const list = postsData.list || [];
-        return list.map((p) => ({
-          ...p,
-          forum: { forumId: f.forumId, name: f.name, coverUrl: f.coverUrl },
-        }));
-      } catch (e) {
-        return [];
-      }
-    }),
-  );
-  const merged = pages.flat();
-  merged.sort((a, b) => {
-    const at = a.createdAt ? new Date(a.createdAt).getTime() : 0;
-    const bt = b.createdAt ? new Date(b.createdAt).getTime() : 0;
-    return bt - at;
-  });
-  posts.value = merged;
-};
-
 const loadPosts = async () => {
   postsLoading.value = true;
   try {
-    if (auth.isAuthed) {
-      try {
-        const data = await feedApi.getFeed({ pageNum: 1, pageSize: 20 });
-        posts.value = data.list || [];
-        return;
-      } catch (e) {
-        await loadGuestLatestPosts();
-        return;
-      }
-    }
-    await loadGuestLatestPosts();
+    const data = await feedApi.getPublicPosts({ pageNum: 1, pageSize: 30 });
+    const forumMap = new Map<number, { forumId: number; name: string; coverUrl?: string }>();
+    for (const f of forums.value) forumMap.set(f.forumId, { forumId: f.forumId, name: f.name, coverUrl: f.coverUrl });
+    posts.value = (data.list || []).map((p) => {
+      const maybeForum = forumMap.get(p.forumId);
+      return {
+        ...p,
+        forum: p.forum || maybeForum,
+      };
+    });
   } finally {
     postsLoading.value = false;
   }

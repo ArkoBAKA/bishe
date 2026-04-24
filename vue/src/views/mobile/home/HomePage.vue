@@ -15,9 +15,7 @@
       </div>
 
       <nav class="actions">
-        <button class="nav-btn" type="button" @click="goHome">
-          首页
-        </button>
+        <button class="nav-btn" type="button" @click="goHome">首页</button>
         <button class="nav-btn" type="button" @click="onClickNotifications">
           消息
         </button>
@@ -364,9 +362,7 @@
         <div class="panel">
           <div class="panel-head">
             <div class="panel-title">热门贴吧</div>
-            <button class="link" type="button" @click="goHome">
-              查看全部
-            </button>
+            <button class="link" type="button" @click="goHome">查看全部</button>
           </div>
           <div class="hot-list">
             <div
@@ -459,7 +455,10 @@
         <form class="modal-form" @submit.prevent="onCreateForumSubmit">
           <label class="field">
             <span>名称</span>
-            <input v-model.trim="createForumName" placeholder="请输入贴吧名称" />
+            <input
+              v-model.trim="createForumName"
+              placeholder="请输入贴吧名称"
+            />
           </label>
           <label class="field">
             <span>简介</span>
@@ -470,10 +469,45 @@
           </label>
           <label class="field">
             <span>封面</span>
-            <input
-              v-model.trim="createForumCoverUrl"
-              placeholder="封面图片 URL（可选）"
-            />
+            <div class="cover-box">
+              <div class="cover-preview">
+                <img
+                  v-if="createForumCoverUrl"
+                  class="cover-img"
+                  :src="createForumCoverUrl"
+                  alt="cover"
+                />
+                <div v-else class="cover-placeholder">未选择图片</div>
+              </div>
+              <div class="cover-actions">
+                <input
+                  ref="coverFileInput"
+                  class="cover-file"
+                  type="file"
+                  accept="image/*"
+                  @change="onCoverFileChange"
+                />
+                <button
+                  class="ghost"
+                  type="button"
+                  :disabled="createForumCoverUploading"
+                  @click="pickCoverFile"
+                >
+                  {{ createForumCoverUploading ? "上传中..." : "上传图片" }}
+                </button>
+                <button
+                  class="ghost"
+                  type="button"
+                  :disabled="createForumCoverUploading || !createForumCoverUrl"
+                  @click="clearCover"
+                >
+                  清除
+                </button>
+              </div>
+              <p v-if="createForumCoverError" class="error">
+                {{ createForumCoverError }}
+              </p>
+            </div>
           </label>
 
           <button
@@ -533,7 +567,13 @@
 import { computed, onMounted, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import type { CommentItem, Forum, NotificationItem, Post } from "@/types/api";
-import { feedApi, followsApi, forumsApi, notificationsApi } from "@/apis";
+import {
+  feedApi,
+  followsApi,
+  forumsApi,
+  notificationsApi,
+  usersApi,
+} from "@/apis";
 import { useAuthStore } from "@/stores/auth";
 
 const router = useRouter();
@@ -562,6 +602,9 @@ const createForumDescription = ref("");
 const createForumCoverUrl = ref("");
 const createForumLoading = ref(false);
 const createForumError = ref("");
+const coverFileInput = ref<HTMLInputElement | null>(null);
+const createForumCoverUploading = ref(false);
+const createForumCoverError = ref("");
 
 type CommentThreadItem = {
   comment: CommentItem;
@@ -661,12 +704,53 @@ const openCreateForum = () => {
   }
   createForumOpen.value = true;
   createForumError.value = "";
+  createForumCoverError.value = "";
 };
 
 const closeCreateForum = () => {
   createForumOpen.value = false;
   createForumLoading.value = false;
   createForumError.value = "";
+  createForumCoverUploading.value = false;
+  createForumCoverError.value = "";
+};
+
+const pickCoverFile = () => {
+  if (!auth.isAuthed) {
+    openLogin();
+    return;
+  }
+  createForumCoverError.value = "";
+  coverFileInput.value?.click();
+};
+
+const clearCover = () => {
+  createForumCoverUrl.value = "";
+  createForumCoverError.value = "";
+  if (coverFileInput.value) coverFileInput.value.value = "";
+};
+
+const onCoverFileChange = async (e: Event) => {
+  if (!auth.isAuthed) {
+    openLogin();
+    return;
+  }
+  const input = e.target as HTMLInputElement | null;
+  const file = input?.files?.[0];
+  if (!file) return;
+
+  createForumCoverUploading.value = true;
+  createForumCoverError.value = "";
+  try {
+    const data = await usersApi.upload({ file, scene: "forum_cover" });
+    createForumCoverUrl.value = data.url;
+  } catch (err: unknown) {
+    createForumCoverError.value =
+      err instanceof Error ? err.message : "上传失败";
+    if (coverFileInput.value) coverFileInput.value.value = "";
+  } finally {
+    createForumCoverUploading.value = false;
+  }
 };
 
 const onCreateForumSubmit = async () => {
@@ -1267,7 +1351,11 @@ onMounted(async () => {
   align-items: center;
   padding: 16px;
   background:
-    radial-gradient(260px 120px at 0% 0%, rgba(79, 70, 229, 0.06), transparent 60%),
+    radial-gradient(
+      260px 120px at 0% 0%,
+      rgba(79, 70, 229, 0.06),
+      transparent 60%
+    ),
     rgba(255, 255, 255, 0.9);
 }
 
@@ -1763,6 +1851,54 @@ onMounted(async () => {
   border: 1px solid #e2e8f0;
   border-radius: 10px;
   outline: none;
+}
+
+.field textarea {
+  min-height: 84px;
+  padding: 10px 12px;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  outline: none;
+  resize: vertical;
+  font-family: inherit;
+  line-height: 1.4;
+}
+
+.cover-box {
+  display: grid;
+  gap: 10px;
+}
+
+.cover-preview {
+  height: 130px;
+  border: 1px dashed #e2e8f0;
+  border-radius: 12px;
+  background: #f8fafc;
+  overflow: hidden;
+  display: grid;
+  place-items: center;
+}
+
+.cover-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.cover-placeholder {
+  color: #94a3b8;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.cover-actions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.cover-file {
+  display: none;
 }
 
 .error {

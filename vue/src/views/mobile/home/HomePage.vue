@@ -394,21 +394,6 @@
             </div>
           </div>
         </div>
-
-        <div class="panel">
-          <div class="panel-title">全站活跃趋势</div>
-          <div class="trend">
-            <svg viewBox="0 0 240 80" class="trend-svg" aria-hidden="true">
-              <path
-                d="M0 55 C 30 25, 60 70, 90 40 C 120 15, 150 55, 180 30 C 200 18, 220 40, 240 22"
-                fill="none"
-                stroke="#4f46e5"
-                stroke-width="3"
-                stroke-linecap="round"
-              />
-            </svg>
-          </div>
-        </div>
       </aside>
     </main>
 
@@ -834,7 +819,9 @@ const loadFollows = async () => {
       targetType: "forum",
     });
     const ids = new Set<number>();
-    for (const item of data.list || []) ids.add(item.targetId);
+    for (const item of data.list || []) {
+      if (item.active !== false) ids.add(item.targetId);
+    }
     myFollowForumIdSet.value = ids;
   } catch (e) {
     myFollowForumIdSet.value = new Set();

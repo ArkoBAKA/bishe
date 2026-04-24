@@ -107,14 +107,6 @@
               <div class="stat-label">累计帖子</div>
               <div class="stat-value">{{ totalPostsText }}</div>
             </div>
-            <div class="stat">
-              <div class="stat-label">吧友总数</div>
-              <div class="stat-value">{{ followersText }}</div>
-            </div>
-            <div class="stat">
-              <div class="stat-label">吧等级</div>
-              <div class="stat-value level">{{ levelText }}</div>
-            </div>
           </div>
 
           <div class="panel feed">
@@ -638,12 +630,6 @@ const totalPostsText = computed(() => {
   return formatCount(posts.value.length);
 });
 
-const followersText = computed(() => {
-  const n = forum.value?.followersCount;
-  if (typeof n !== "number") return "-";
-  return formatCount(n);
-});
-
 const todayNewCount = computed(() => {
   const now = new Date();
   const y = now.getFullYear();
@@ -655,14 +641,6 @@ const todayNewCount = computed(() => {
     const t = new Date(p.createdAt).getTime();
     return Number.isFinite(t) && t >= start;
   }).length;
-});
-
-const levelText = computed(() => {
-  const n = forum.value?.followersCount ?? 0;
-  if (n >= 50000) return "钻石级";
-  if (n >= 10000) return "黄金级";
-  if (n >= 2000) return "白银级";
-  return "青铜级";
 });
 
 const pinnedPostIdSet = computed(() => {
@@ -1067,10 +1045,6 @@ onMounted(async () => {
   margin-top: 6px;
   font-weight: 900;
   color: #0f172a;
-}
-
-.stat-value.level {
-  color: #f59e0b;
 }
 
 .feed {

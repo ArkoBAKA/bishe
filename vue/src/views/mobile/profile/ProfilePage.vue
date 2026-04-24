@@ -97,13 +97,14 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref } from "vue";
-import { useRouter } from "vue-router";
+import { computed, onActivated, onMounted, ref, watch } from "vue";
+import { useRoute, useRouter } from "vue-router";
 import type { Forum } from "@/types/api";
 import { followsApi, forumsApi, notificationsApi } from "@/apis";
 import { useAuthStore } from "@/stores/auth";
 
 const router = useRouter();
+const route = useRoute();
 const auth = useAuthStore();
 
 const loadingFollows = ref(false);
@@ -122,8 +123,12 @@ const followForums = computed(() => {
 });
 
 const loadAllForums = async () => {
-  const data = await forumsApi.getForums({ pageNum: 1, pageSize: 200 });
-  allForums.value = data.list || [];
+  try {
+    const data = await forumsApi.getForums({ pageNum: 1, pageSize: 200 });
+    allForums.value = data.list || [];
+  } catch {
+    allForums.value = [];
+  }
 };
 
 const loadFollows = async () => {
@@ -137,6 +142,8 @@ const loadFollows = async () => {
     followForumIds.value = (data.list || [])
       .filter((x) => x.active !== false)
       .map((x) => x.targetId);
+  } catch {
+    followForumIds.value = [];
   } finally {
     loadingFollows.value = false;
   }
@@ -151,6 +158,8 @@ const loadUnread = async () => {
       isRead: false,
     });
     unreadCount.value = data.total || 0;
+  } catch {
+    unreadCount.value = 0;
   } finally {
     loadingUnread.value = false;
   }
@@ -161,11 +170,32 @@ const onLogout = () => {
   router.replace("/m/home");
 };
 
+const refresh = async () => {
+  if (!auth.isAuthed) {
+    followForumIds.value = [];
+    allForums.value = [];
+    unreadCount.value = 0;
+    return;
+  }
+  await Promise.all([loadAllForums(), loadFollows(), loadUnread()]);
+};
+
 onMounted(async () => {
-  await loadAllForums();
-  await loadFollows();
-  await loadUnread();
+  await refresh();
 });
+
+onActivated(async () => {
+  if (route.name !== "mobile-profile") return;
+  await refresh();
+});
+
+watch(
+  () => auth.isAuthed,
+  async () => {
+    if (route.name !== "mobile-profile") return;
+    await refresh();
+  },
+);
 </script>
 
 <style scoped>

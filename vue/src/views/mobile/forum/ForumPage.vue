@@ -206,10 +206,12 @@
                   </div>
                 </div>
                 <div
-                  v-if="p.content && pinnedPostIdSet.has(p.postId)"
-                  class="post-preview"
+                  v-if="p.content"
+                  class="post-rich"
+                  :class="{ expanded: isContentExpanded(p.postId) }"
                 >
-                  {{ p.content }}
+                  <div class="rich" v-html="sanitizeRichHtml(p.content)" />
+                  <div v-if="!isContentExpanded(p.postId)" class="rich-fade" />
                 </div>
                 <div class="post-actions">
                   <button
@@ -218,6 +220,13 @@
                     @click="toggleComments(p.postId)"
                   >
                     {{ isCommentsExpanded(p.postId) ? "收起评论" : "评论" }}
+                  </button>
+                  <button
+                    class="btn"
+                    type="button"
+                    @click="toggleContent(p.postId)"
+                  >
+                    {{ isContentExpanded(p.postId) ? "收起正文" : "展开正文" }}
                   </button>
                   <button
                     class="btn"
@@ -272,9 +281,71 @@
                         <div class="comment-content">
                           {{ it.comment.content }}
                         </div>
+                        <div class="comment-actions">
+                          <button
+                            class="comment-btn"
+                            type="button"
+                            @click="openReply(p.postId, it.comment.commentId)"
+                          >
+                            回复
+                          </button>
+                        </div>
+                        <div
+                          v-if="
+                            replyParentByPostId[p.postId] ===
+                            it.comment.commentId
+                          "
+                          class="reply-box"
+                        >
+                          <textarea
+                            v-model.trim="replyContentByPostId[p.postId]"
+                            class="reply-input"
+                            placeholder="写下你的回复..."
+                          />
+                          <div class="reply-actions">
+                            <button
+                              class="comment-send"
+                              type="button"
+                              :disabled="
+                                sendingCommentId === it.comment.commentId
+                              "
+                              @click="submitReply(p.postId)"
+                            >
+                              {{
+                                sendingCommentId === it.comment.commentId
+                                  ? "发送中..."
+                                  : "发送"
+                              }}
+                            </button>
+                            <button
+                              class="comment-cancel"
+                              type="button"
+                              @click="cancelReply(p.postId)"
+                            >
+                              取消
+                            </button>
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </div>
+                </div>
+
+                <div class="add-comment">
+                  <input
+                    v-model.trim="newCommentByPostId[p.postId]"
+                    class="add-input"
+                    placeholder="新增评论..."
+                    @focus="prepareComment(p.postId)"
+                  />
+                  <button
+                    class="add-send"
+                    type="button"
+                    :disabled="sendingPostId === p.postId"
+                    @click="submitNewComment(p.postId)"
+                  >
+                    {{ sendingPostId === p.postId ? "发送中..." : "发送" }}
+                  </button>
                 </div>
               </article>
             </div>
@@ -365,6 +436,13 @@ type CommentThreadItem = {
 const commentsByPostId = ref<Record<number, CommentItem[]>>({});
 const commentsLoadingByPostId = ref<Record<number, boolean>>({});
 const commentsExpandedByPostId = ref<Record<number, boolean>>({});
+const contentExpandedByPostId = ref<Record<number, boolean>>({});
+const richCache = new Map<string, string>();
+const newCommentByPostId = ref<Record<number, string>>({});
+const replyParentByPostId = ref<Record<number, number>>({});
+const replyContentByPostId = ref<Record<number, string>>({});
+const sendingPostId = ref<number | null>(null);
+const sendingCommentId = ref<number | null>(null);
 
 const formatTime = (value: string) => {
   const d = new Date(value);
@@ -421,8 +499,8 @@ const commentThread = (postId: number) => {
   return buildCommentThread(list);
 };
 
-const ensureCommentsLoaded = async (postId: number) => {
-  if (commentsByPostId.value[postId]) return;
+const ensureCommentsLoaded = async (postId: number, force = false) => {
+  if (commentsByPostId.value[postId] && !force) return;
   commentsLoadingByPostId.value[postId] = true;
   try {
     const data = await feedApi.getPostComments(postId, {
@@ -439,6 +517,107 @@ const toggleComments = async (postId: number) => {
   const next = !isCommentsExpanded(postId);
   commentsExpandedByPostId.value[postId] = next;
   if (next) await ensureCommentsLoaded(postId);
+};
+
+const isContentExpanded = (postId: number) =>
+  !!contentExpandedByPostId.value[postId];
+
+const toggleContent = (postId: number) => {
+  contentExpandedByPostId.value[postId] = !isContentExpanded(postId);
+};
+
+const sanitizeRichHtml = (html: string) => {
+  if (!html) return "";
+  const cached = richCache.get(html);
+  if (cached) return cached;
+  const doc = new DOMParser().parseFromString(html, "text/html");
+  const blocked = [
+    "script",
+    "style",
+    "iframe",
+    "object",
+    "embed",
+    "link",
+    "meta",
+  ];
+  for (const sel of blocked) {
+    for (const el of Array.from(doc.querySelectorAll(sel))) el.remove();
+  }
+  for (const el of Array.from(doc.body.querySelectorAll("*"))) {
+    for (const attr of Array.from(el.attributes)) {
+      const name = attr.name.toLowerCase();
+      const value = (attr.value || "").trim();
+      if (name.startsWith("on")) {
+        el.removeAttribute(attr.name);
+        continue;
+      }
+      if ((name === "href" || name === "src") && /^javascript:/i.test(value)) {
+        el.removeAttribute(attr.name);
+        continue;
+      }
+    }
+  }
+  const out = doc.body.innerHTML;
+  richCache.set(html, out);
+  return out;
+};
+
+const requireLogin = () => {
+  if (auth.isAuthed) return true;
+  router.push({ name: "mobile-login", query: { redirect: route.fullPath } });
+  return false;
+};
+
+const prepareComment = async (postId: number) => {
+  commentsExpandedByPostId.value[postId] = true;
+  await ensureCommentsLoaded(postId);
+};
+
+const submitNewComment = async (postId: number) => {
+  if (!requireLogin()) return;
+  const text = (newCommentByPostId.value[postId] || "").trim();
+  if (!text) return;
+  sendingPostId.value = postId;
+  try {
+    await feedApi.createComment(postId, { content: text });
+    newCommentByPostId.value[postId] = "";
+    await prepareComment(postId);
+    await ensureCommentsLoaded(postId, true);
+  } finally {
+    sendingPostId.value = null;
+  }
+};
+
+const openReply = async (postId: number, commentId: number) => {
+  if (!requireLogin()) return;
+  await prepareComment(postId);
+  replyParentByPostId.value[postId] = commentId;
+  if (!replyContentByPostId.value[postId])
+    replyContentByPostId.value[postId] = "";
+};
+
+const cancelReply = (postId: number) => {
+  replyParentByPostId.value[postId] = 0 as unknown as number;
+  replyContentByPostId.value[postId] = "";
+};
+
+const submitReply = async (postId: number) => {
+  if (!requireLogin()) return;
+  const parentId = replyParentByPostId.value[postId];
+  if (!parentId) return;
+  const text = (replyContentByPostId.value[postId] || "").trim();
+  if (!text) return;
+  sendingCommentId.value = parentId;
+  try {
+    await feedApi.createComment(postId, {
+      content: text,
+      parentCommentId: parentId,
+    });
+    cancelReply(postId);
+    await ensureCommentsLoaded(postId, true);
+  } finally {
+    sendingCommentId.value = null;
+  }
 };
 
 const formatTimeShort = (value: string) => {
@@ -963,6 +1142,15 @@ onMounted(async () => {
   border: 1px solid #eef0f5;
   border-radius: 16px;
   padding: 12px 12px 10px;
+  background: #fff;
+  transition:
+    box-shadow 0.2s ease,
+    border-color 0.2s ease;
+}
+
+.post-card:hover {
+  border-color: rgba(79, 70, 229, 0.18);
+  box-shadow: 0 14px 32px rgba(15, 23, 42, 0.06);
 }
 
 .post-card.pin {
@@ -1001,6 +1189,7 @@ onMounted(async () => {
   line-height: 1.35;
   overflow: hidden;
   display: -webkit-box;
+  line-clamp: 2;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
 }
@@ -1066,6 +1255,57 @@ onMounted(async () => {
   overflow: auto;
 }
 
+.post-rich {
+  margin-top: 10px;
+  border: 1px solid #eef0f5;
+  border-radius: 12px;
+  background: linear-gradient(180deg, #f8fafc 0%, #ffffff 100%);
+  position: relative;
+  overflow: hidden;
+  max-height: 220px;
+}
+
+.post-rich.expanded {
+  max-height: none;
+}
+
+.rich {
+  padding: 10px 12px;
+  color: #334155;
+  line-height: 1.75;
+  white-space: normal;
+  word-break: break-word;
+}
+
+.rich-fade {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 64px;
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0),
+    rgba(255, 255, 255, 1)
+  );
+  pointer-events: none;
+}
+
+:deep(.rich img) {
+  max-width: 100%;
+  height: auto;
+  border-radius: 10px;
+  display: block;
+}
+
+:deep(.rich p) {
+  margin: 0.5em 0;
+}
+
+:deep(.rich a) {
+  color: #4f46e5;
+}
+
 .post-actions {
   margin-top: 10px;
   display: flex;
@@ -1129,6 +1369,103 @@ onMounted(async () => {
   color: #334155;
   line-height: 1.7;
   white-space: pre-wrap;
+}
+
+.comment-actions {
+  margin-top: 8px;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.comment-btn {
+  height: 28px;
+  padding: 0 10px;
+  border: 1px solid #e2e8f0;
+  background: #fff;
+  border-radius: 999px;
+  cursor: pointer;
+  font-size: 12px;
+  color: #475569;
+  font-weight: 800;
+}
+
+.reply-box {
+  margin-top: 10px;
+  border-top: 1px dashed #e2e8f0;
+  padding-top: 10px;
+  display: grid;
+  gap: 10px;
+}
+
+.reply-input {
+  min-height: 70px;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 10px 12px;
+  outline: none;
+  resize: vertical;
+  font-family: inherit;
+  line-height: 1.6;
+  background: #fff;
+}
+
+.reply-actions {
+  display: inline-flex;
+  gap: 10px;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+}
+
+.comment-send {
+  height: 32px;
+  padding: 0 12px;
+  border: 0;
+  background: #4f46e5;
+  color: #fff;
+  border-radius: 12px;
+  cursor: pointer;
+  font-weight: 900;
+}
+
+.comment-cancel {
+  height: 32px;
+  padding: 0 12px;
+  border: 1px solid #e2e8f0;
+  background: #fff;
+  border-radius: 12px;
+  cursor: pointer;
+  font-weight: 800;
+  color: #334155;
+}
+
+.add-comment {
+  margin-top: 12px;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 10px;
+  align-items: center;
+  border-top: 1px solid #eef0f5;
+  padding-top: 12px;
+}
+
+.add-input {
+  height: 38px;
+  padding: 0 12px;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  outline: none;
+  background: #fff;
+}
+
+.add-send {
+  height: 38px;
+  padding: 0 12px;
+  border: 0;
+  background: #4f46e5;
+  color: #fff;
+  border-radius: 12px;
+  cursor: pointer;
+  font-weight: 900;
 }
 
 .btn {

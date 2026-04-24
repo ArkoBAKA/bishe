@@ -46,3 +46,13 @@ export const getPostComments = (postId: number | string, params?: { pageNum?: nu
     method: 'GET',
     params
   })
+
+export const createComment = (
+  postId: number | string,
+  payload: { content: string; parentCommentId?: number }
+) =>
+  request<{ commentId: number }>({
+    url: `/api/v1/posts/${postId}/comments`,
+    method: 'POST',
+    data: payload
+  })

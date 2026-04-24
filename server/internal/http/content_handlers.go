@@ -223,6 +223,7 @@ func listForumPostsHandler(deps Deps) gin.HandlerFunc {
 				"postId":       p.ID,
 				"forumId":      p.ForumID,
 				"title":        p.Title,
+				"content":      p.Content,
 				"authorId":     p.AuthorID,
 				"status":       p.Status,
 				"likeCount":    p.LikeCount,

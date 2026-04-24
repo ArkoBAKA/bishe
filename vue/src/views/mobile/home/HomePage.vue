@@ -65,9 +65,7 @@
     <main class="layout">
       <aside class="left">
         <div class="panel">
-          <div class="panel-title">
-            贴吧列表
-          </div>
+          <div class="panel-title">贴吧列表</div>
           <div v-if="forumsLoading" class="muted">加载中...</div>
           <div v-else class="forum-list">
             <button
@@ -79,13 +77,7 @@
             >
               <div class="forum-left">
                 <div class="forum-icon">
-                  <img
-                    v-if="f.coverUrl"
-                    class="forum-icon-img"
-                    :src="f.coverUrl"
-                    alt="cover"
-                  />
-                  <div v-else class="forum-icon-fallback">
+                  <div class="forum-icon-fallback">
                     {{ (f.name || "吧").slice(0, 1) }}
                   </div>
                 </div>
@@ -97,7 +89,11 @@
                 </div>
               </div>
               <div class="forum-ops" @click.stop>
-                <button class="follow" type="button" @click="toggleFollow(f.forumId)">
+                <button
+                  class="follow"
+                  type="button"
+                  @click="toggleFollow(f.forumId)"
+                >
                   {{ isFollowed(f.forumId) ? "已关注" : "关注" }}
                 </button>
               </div>
@@ -216,11 +212,12 @@
               <div v-if="p.content" class="post-content">{{ p.content }}</div>
 
               <div class="post-foot">
-                <button class="post-btn" type="button" @click="toggleComments(p.postId)">
-                  {{
-                    isCommentsExpanded(p.postId)
-                      ? "收起评论"
-                      : "评论"
+                <button
+                  class="post-btn"
+                  type="button"
+                  @click="toggleComments(p.postId)"
+                >
+                  {{ isCommentsExpanded(p.postId) ? "收起评论" : "评论"
                   }}<span v-if="typeof p.commentCount === 'number'">
                     {{ p.commentCount }}</span
                   >
@@ -270,17 +267,22 @@
                           "匿名"
                         }}</span>
                         <span v-if="it.replyTo" class="reply-to"
-                          >回复 {{
+                          >回复
+                          {{
                             it.replyTo.author?.nickname ||
                             `用户${it.replyTo.author?.userId || ""}` ||
                             "匿名"
                           }}</span
                         >
-                        <span v-if="it.comment.createdAt" class="comment-time">{{
-                          formatTime(it.comment.createdAt)
-                        }}</span>
+                        <span
+                          v-if="it.comment.createdAt"
+                          class="comment-time"
+                          >{{ formatTime(it.comment.createdAt) }}</span
+                        >
                       </div>
-                      <div class="comment-content">{{ it.comment.content }}</div>
+                      <div class="comment-content">
+                        {{ it.comment.content }}
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -379,9 +381,7 @@
           <button class="primary" type="submit" :disabled="loginLoading">
             {{ loginLoading ? "登录中..." : "登录" }}
           </button>
-          <button class="ghost" type="button" @click="goRegister">
-            注册
-          </button>
+          <button class="ghost" type="button" @click="goRegister">注册</button>
           <p v-if="loginError" class="error">{{ loginError }}</p>
         </form>
       </div>
@@ -451,7 +451,11 @@ const loginPassword = ref("");
 const loginLoading = ref(false);
 const loginError = ref("");
 
-type CommentThreadItem = { comment: CommentItem; depth: number; replyTo?: CommentItem };
+type CommentThreadItem = {
+  comment: CommentItem;
+  depth: number;
+  replyTo?: CommentItem;
+};
 const commentsByPostId = ref<Record<number, CommentItem[]>>({});
 const commentsLoadingByPostId = ref<Record<number, boolean>>({});
 const commentsExpandedByPostId = ref<Record<number, boolean>>({});
@@ -586,8 +590,16 @@ const loadPosts = async () => {
   postsLoading.value = true;
   try {
     const data = await feedApi.getPublicPosts({ pageNum: 1, pageSize: 30 });
-    const forumMap = new Map<number, { forumId: number; name: string; coverUrl?: string }>();
-    for (const f of forums.value) forumMap.set(f.forumId, { forumId: f.forumId, name: f.name, coverUrl: f.coverUrl });
+    const forumMap = new Map<
+      number,
+      { forumId: number; name: string; coverUrl?: string }
+    >();
+    for (const f of forums.value)
+      forumMap.set(f.forumId, {
+        forumId: f.forumId,
+        name: f.name,
+        coverUrl: f.coverUrl,
+      });
     posts.value = (data.list || []).map((p) => {
       const maybeForum = forumMap.get(p.forumId);
       return {
@@ -617,8 +629,10 @@ const toForum = (forumId: number | string) => {
   router.push({ name: "mobile-forum", params: { id: String(forumId) } });
 };
 
-const isCommentsExpanded = (postId: number) => !!commentsExpandedByPostId.value[postId];
-const isCommentsLoading = (postId: number) => !!commentsLoadingByPostId.value[postId];
+const isCommentsExpanded = (postId: number) =>
+  !!commentsExpandedByPostId.value[postId];
+const isCommentsLoading = (postId: number) =>
+  !!commentsLoadingByPostId.value[postId];
 
 const buildCommentThread = (items: CommentItem[]) => {
   const byId = new Map<number, CommentItem>();
@@ -663,7 +677,10 @@ const ensureCommentsLoaded = async (postId: number) => {
   if (commentsByPostId.value[postId]) return;
   commentsLoadingByPostId.value[postId] = true;
   try {
-    const data = await feedApi.getPostComments(postId, { pageNum: 1, pageSize: 50 });
+    const data = await feedApi.getPostComments(postId, {
+      pageNum: 1,
+      pageSize: 50,
+    });
     commentsByPostId.value[postId] = data.list || [];
   } finally {
     commentsLoadingByPostId.value[postId] = false;
@@ -908,7 +925,9 @@ onMounted(async () => {
   background: #fff;
   cursor: pointer;
   text-align: left;
-  transition: box-shadow 0.2s ease, border-color 0.2s ease,
+  transition:
+    box-shadow 0.2s ease,
+    border-color 0.2s ease,
     transform 0.2s ease;
 }
 
@@ -1055,7 +1074,9 @@ onMounted(async () => {
   border-radius: 14px;
   padding: 14px;
   background: #fff;
-  transition: box-shadow 0.2s ease, border-color 0.2s ease;
+  transition:
+    box-shadow 0.2s ease,
+    border-color 0.2s ease;
 }
 
 .post-card:hover {

@@ -272,7 +272,7 @@
 - **Path**: `/api/v1/forums/{forumId}/posts`
 - **Auth**: 不需要
 - **角色**: `guest`
-- **说明**: 分页查询某贴吧下帖子列表（默认仅返回可见帖子）
+- **说明**: 分页查询某贴吧下帖子列表（默认仅返回可见帖子），返回每条帖子的内容字段
 
 ### 请求参数
 
@@ -300,6 +300,7 @@
         "postId": 10001,
         "forumId": 10001,
         "title": "Hello",
+        "content": "正文",
         "authorId": 10001,
         "status": "visible",
         "likeCount": 0,

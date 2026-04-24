@@ -737,6 +737,9 @@ const submitReport = async () => {
     return;
   }
 
+  const ok = window.confirm("确认提交举报？");
+  if (!ok) return;
+
   reportLoading.value = true;
   reportError.value = "";
   try {

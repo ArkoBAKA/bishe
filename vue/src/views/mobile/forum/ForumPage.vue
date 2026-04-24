@@ -227,6 +227,13 @@
                   >
                     分享
                   </button>
+                  <button
+                    class="btn"
+                    type="button"
+                    @click="openReport('post', p.postId)"
+                  >
+                    举报
+                  </button>
                 </div>
 
                 <div v-if="isCommentsExpanded(p.postId)" class="comments-box">
@@ -280,6 +287,13 @@
                             @click="openReply(p.postId, it.comment.commentId)"
                           >
                             回复
+                          </button>
+                          <button
+                            class="comment-btn"
+                            type="button"
+                            @click="openReport('comment', it.comment.commentId)"
+                          >
+                            举报
                           </button>
                         </div>
                         <div
@@ -386,14 +400,42 @@
         </aside>
       </div>
     </main>
+
+    <div v-if="reportOpen" class="modal-mask" @click.self="closeReport">
+      <div class="modal">
+        <div class="modal-title">举报</div>
+        <form class="modal-form" @submit.prevent="submitReport">
+          <label class="field">
+            <span>原因</span>
+            <input v-model.trim="reportReason" placeholder="请输入举报原因" />
+          </label>
+          <label class="field">
+            <span>补充描述（可选）</span>
+            <textarea
+              v-model.trim="reportDetail"
+              placeholder="补充说明（最多 1000 字）"
+            />
+          </label>
+          <button
+            class="primary"
+            type="submit"
+            :disabled="reportLoading || !reportReason.trim()"
+          >
+            {{ reportLoading ? "提交中..." : "确认举报" }}
+          </button>
+          <button class="ghost" type="button" @click="closeReport">取消</button>
+          <p v-if="reportError" class="error">{{ reportError }}</p>
+        </form>
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { computed, onMounted, ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
-import type { CommentItem, Forum, Post } from "@/types/api";
-import { feedApi, followsApi, forumsApi } from "@/apis";
+import type { CommentItem, Forum, Post, ReportTargetType } from "@/types/api";
+import { feedApi, followsApi, forumsApi, reportsApi } from "@/apis";
 import { useAuthStore } from "@/stores/auth";
 
 const route = useRoute();
@@ -423,6 +465,14 @@ const replyParentByPostId = ref<Record<number, number>>({});
 const replyContentByPostId = ref<Record<number, string>>({});
 const sendingPostId = ref<number | null>(null);
 const sendingCommentId = ref<number | null>(null);
+
+const reportOpen = ref(false);
+const reportTargetType = ref<ReportTargetType>("post");
+const reportTargetId = ref(0);
+const reportReason = ref("");
+const reportDetail = ref("");
+const reportLoading = ref(false);
+const reportError = ref("");
 
 const formatTime = (value: string) => {
   const d = new Date(value);
@@ -546,6 +596,60 @@ const requireLogin = () => {
   if (auth.isAuthed) return true;
   router.push({ name: "mobile-login", query: { redirect: route.fullPath } });
   return false;
+};
+
+const openReport = (targetType: ReportTargetType, targetId: number) => {
+  if (!requireLogin()) return;
+  reportTargetType.value = targetType;
+  reportTargetId.value = targetId;
+  reportReason.value = "";
+  reportDetail.value = "";
+  reportError.value = "";
+  reportOpen.value = true;
+};
+
+const closeReport = () => {
+  reportOpen.value = false;
+  reportLoading.value = false;
+  reportError.value = "";
+};
+
+const submitReport = async () => {
+  if (!requireLogin()) return;
+  const reason = reportReason.value.trim();
+  if (!reason) {
+    reportError.value = "请输入举报原因";
+    return;
+  }
+  if (reason.length > 64) {
+    reportError.value = "原因最多 64 字";
+    return;
+  }
+  const detail = reportDetail.value.trim();
+  if (detail.length > 1000) {
+    reportError.value = "补充描述最多 1000 字";
+    return;
+  }
+
+  const ok = window.confirm("确认提交举报？");
+  if (!ok) return;
+
+  reportLoading.value = true;
+  reportError.value = "";
+  try {
+    await reportsApi.createReport({
+      targetType: reportTargetType.value,
+      targetId: reportTargetId.value,
+      reason,
+      detail: detail ? detail : undefined,
+    });
+    reportOpen.value = false;
+    window.alert("已提交举报");
+  } catch (e: unknown) {
+    reportError.value = e instanceof Error ? e.message : "提交失败";
+  } finally {
+    reportLoading.value = false;
+  }
 };
 
 const prepareComment = async (postId: number) => {
@@ -1662,6 +1766,84 @@ onMounted(async () => {
   background: #eef2ff;
   color: #4f46e5;
   font-weight: 900;
+}
+
+.modal-mask {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.42);
+  display: grid;
+  place-items: center;
+  z-index: 60;
+}
+
+.modal {
+  width: min(420px, calc(100vw - 32px));
+  background: #fff;
+  border-radius: 16px;
+  border: 1px solid #eef0f5;
+  padding: 16px;
+}
+
+.modal-title {
+  font-weight: 900;
+  color: #0f172a;
+  margin-bottom: 12px;
+}
+
+.modal-form {
+  display: grid;
+  gap: 12px;
+}
+
+.field {
+  display: grid;
+  gap: 6px;
+}
+
+.field span {
+  font-size: 12px;
+  color: #64748b;
+}
+
+.field input {
+  height: 38px;
+  padding: 0 12px;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  outline: none;
+}
+
+.field textarea {
+  min-height: 84px;
+  padding: 10px 12px;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  outline: none;
+  resize: vertical;
+  font-family: inherit;
+  line-height: 1.4;
+}
+
+.primary {
+  height: 38px;
+  padding: 0 12px;
+  border: 0;
+  background: #4f46e5;
+  color: #fff;
+  border-radius: 12px;
+  cursor: pointer;
+  font-weight: 900;
+}
+
+.primary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.error {
+  color: #dc2626;
+  margin: 0;
 }
 
 @media (max-width: 1024px) {

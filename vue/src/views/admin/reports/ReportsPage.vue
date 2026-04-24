@@ -98,7 +98,7 @@
               <button
                 class="btn"
                 type="button"
-                :disabled="actingId === r.reportId || r.targetType !== 'user'"
+                :disabled="actingId === r.reportId"
                 @click="process(r, 'banUser')"
               >
                 封禁

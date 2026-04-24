@@ -1,7 +1,7 @@
 /*
  * @Date: 2026-04-23 14:43:56
  * @LastEditors: ArongWang 3312428832@qq.com
- * @LastEditTime: 2026-04-23 15:29:06
+ * @LastEditTime: 2026-04-24 15:24:57
  * @FilePath: /vue/src/types/api.ts
  * @Description: 
  */
@@ -68,4 +68,17 @@ export interface CommentItem {
     content: string
     createdAt?: string
     author?: UserSummary
+}
+
+export type ReportTargetType = 'post' | 'comment' | 'user'
+
+export interface CreateReportPayload {
+    targetType: ReportTargetType
+    targetId: number
+    reason: string
+    detail?: string
+}
+
+export interface CreateReportResponse {
+    reportId: number
 }

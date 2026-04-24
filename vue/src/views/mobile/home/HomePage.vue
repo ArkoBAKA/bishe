@@ -227,6 +227,13 @@
                 >
                   进入贴吧
                 </button>
+                <button
+                  class="post-btn"
+                  type="button"
+                  @click="openReport('post', p.postId)"
+                >
+                  举报
+                </button>
                 <div class="post-metrics">
                   <span v-if="typeof p.viewCount === 'number'"
                     >浏览 {{ p.viewCount }}</span
@@ -288,6 +295,13 @@
                           @click="openReply(p.postId, it.comment.commentId)"
                         >
                           回复
+                        </button>
+                        <button
+                          class="comment-btn"
+                          type="button"
+                          @click="openReport('comment', it.comment.commentId)"
+                        >
+                          举报
                         </button>
                       </div>
 
@@ -509,14 +523,42 @@
         </form>
       </div>
     </div>
+
+    <div v-if="reportOpen" class="modal-mask" @click.self="closeReport">
+      <div class="modal">
+        <div class="modal-title">举报</div>
+        <form class="modal-form" @submit.prevent="submitReport">
+          <label class="field">
+            <span>原因</span>
+            <input v-model.trim="reportReason" placeholder="请输入举报原因" />
+          </label>
+          <label class="field">
+            <span>补充描述（可选）</span>
+            <textarea
+              v-model.trim="reportDetail"
+              placeholder="补充说明（最多 1000 字）"
+            />
+          </label>
+          <button
+            class="primary"
+            type="submit"
+            :disabled="reportLoading || !reportReason.trim()"
+          >
+            {{ reportLoading ? "提交中..." : "确认举报" }}
+          </button>
+          <button class="ghost" type="button" @click="closeReport">取消</button>
+          <p v-if="reportError" class="error">{{ reportError }}</p>
+        </form>
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
-import type { CommentItem, Forum, Post } from "@/types/api";
-import { feedApi, followsApi, forumsApi, usersApi } from "@/apis";
+import type { CommentItem, Forum, Post, ReportTargetType } from "@/types/api";
+import { feedApi, followsApi, forumsApi, reportsApi, usersApi } from "@/apis";
 import { useAuthStore } from "@/stores/auth";
 
 const router = useRouter();
@@ -548,6 +590,14 @@ const createForumError = ref("");
 const coverFileInput = ref<HTMLInputElement | null>(null);
 const createForumCoverUploading = ref(false);
 const createForumCoverError = ref("");
+
+const reportOpen = ref(false);
+const reportTargetType = ref<ReportTargetType>("post");
+const reportTargetId = ref(0);
+const reportReason = ref("");
+const reportDetail = ref("");
+const reportLoading = ref(false);
+const reportError = ref("");
 
 type CommentThreadItem = {
   comment: CommentItem;
@@ -652,6 +702,57 @@ const closeCreateForum = () => {
   createForumError.value = "";
   createForumCoverUploading.value = false;
   createForumCoverError.value = "";
+};
+
+const openReport = (targetType: ReportTargetType, targetId: number) => {
+  if (!auth.isAuthed) {
+    openLogin();
+    return;
+  }
+  reportTargetType.value = targetType;
+  reportTargetId.value = targetId;
+  reportReason.value = "";
+  reportDetail.value = "";
+  reportError.value = "";
+  reportOpen.value = true;
+};
+
+const closeReport = () => {
+  reportOpen.value = false;
+};
+
+const submitReport = async () => {
+  const reason = reportReason.value.trim();
+  if (!reason) {
+    reportError.value = "请输入举报原因";
+    return;
+  }
+  if (reason.length > 64) {
+    reportError.value = "原因最多 64 字";
+    return;
+  }
+  const detail = reportDetail.value.trim();
+  if (detail.length > 1000) {
+    reportError.value = "补充描述最多 1000 字";
+    return;
+  }
+
+  reportLoading.value = true;
+  reportError.value = "";
+  try {
+    await reportsApi.createReport({
+      targetType: reportTargetType.value,
+      targetId: reportTargetId.value,
+      reason,
+      detail: detail ? detail : undefined,
+    });
+    reportOpen.value = false;
+    window.alert("已提交举报");
+  } catch (e: unknown) {
+    reportError.value = e instanceof Error ? e.message : "提交失败";
+  } finally {
+    reportLoading.value = false;
+  }
 };
 
 const pickCoverFile = () => {

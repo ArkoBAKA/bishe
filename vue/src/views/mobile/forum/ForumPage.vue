@@ -838,21 +838,22 @@ onMounted(async () => {
 <style scoped>
 .forum-page {
   min-height: 100vh;
-  background: #f5f7fb;
+  background: transparent;
 }
 
 .site-top {
   position: sticky;
   top: 0;
   z-index: 30;
-  height: 64px;
-  padding: 0 16px;
+  min-height: 68px;
+  padding: 10px 18px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  border-bottom: 1px solid #eef0f5;
-  background: rgba(255, 255, 255, 0.9);
-  backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(226, 232, 240, 0.9);
+  background: rgba(255, 255, 255, 0.82);
+  backdrop-filter: blur(18px);
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.04);
 }
 
 .brand {
@@ -920,7 +921,7 @@ onMounted(async () => {
 
 .hero {
   position: relative;
-  min-height: 150px;
+  min-height: 190px;
   background-size: cover;
   background-position: center;
 }
@@ -939,11 +940,11 @@ onMounted(async () => {
   position: relative;
   max-width: 1200px;
   margin: 0 auto;
-  padding: 18px 16px;
+  padding: 26px 18px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 18px;
+  gap: 22px;
 }
 
 .hero-left {
@@ -953,14 +954,15 @@ onMounted(async () => {
 }
 
 .forum-avatar {
-  width: 64px;
-  height: 64px;
-  border-radius: 16px;
+  width: 72px;
+  height: 72px;
+  border-radius: 18px;
   background: rgba(255, 255, 255, 0.85);
   border: 1px solid rgba(255, 255, 255, 0.7);
   overflow: hidden;
   display: grid;
   place-items: center;
+  box-shadow: 0 10px 26px rgba(15, 23, 42, 0.14);
 }
 
 .forum-avatar-img {
@@ -977,7 +979,7 @@ onMounted(async () => {
 
 .forum-meta {
   display: grid;
-  gap: 6px;
+  gap: 8px;
   color: #fff;
 }
 
@@ -989,7 +991,8 @@ onMounted(async () => {
 
 .forum-name {
   font-weight: 900;
-  font-size: 20px;
+  font-size: 24px;
+  letter-spacing: 0.2px;
 }
 
 .verified {
@@ -1005,9 +1008,10 @@ onMounted(async () => {
 }
 
 .forum-desc {
-  font-size: 12px;
+  font-size: 13px;
   color: rgba(255, 255, 255, 0.88);
   max-width: 520px;
+  line-height: 1.7;
 }
 
 .hero-right {
@@ -1017,17 +1021,19 @@ onMounted(async () => {
 }
 
 .follow {
-  height: 34px;
-  padding: 0 12px;
+  height: 38px;
+  padding: 0 16px;
   border: 0;
-  background: #4f46e5;
+  background: linear-gradient(135deg, #4f46e5 0%, #6366f1 100%);
   color: #fff;
   border-radius: 999px;
   cursor: pointer;
+  font-weight: 900;
+  box-shadow: 0 12px 24px rgba(79, 70, 229, 0.22);
 }
 
 .main {
-  padding: 16px;
+  padding: 22px 18px 34px;
 }
 
 .main-inner {
@@ -1035,27 +1041,28 @@ onMounted(async () => {
   margin: 0 auto;
   display: grid;
   grid-template-columns: 1fr 340px;
-  gap: 16px;
+  gap: 18px;
   align-items: start;
 }
 
 .panel {
-  background: #fff;
-  border: 1px solid #eef0f5;
-  border-radius: 16px;
-  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.03);
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: 20px;
+  box-shadow: var(--card-shadow);
+  backdrop-filter: blur(10px);
 }
 
 .stats {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 12px;
-  padding: 14px;
+  gap: 14px;
+  padding: 18px;
 }
 
 .stat {
   border-right: 1px solid #eef0f5;
-  padding-right: 12px;
+  padding-right: 14px;
 }
 
 .stat:last-child {
@@ -1079,14 +1086,14 @@ onMounted(async () => {
 }
 
 .feed {
-  margin-top: 16px;
+  margin-top: 18px;
 }
 
 .feed-head {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 12px 14px;
+  padding: 16px 18px 12px;
   border-bottom: 1px solid #eef0f5;
 }
 
@@ -1134,15 +1141,15 @@ onMounted(async () => {
 
 .post-list {
   display: grid;
-  gap: 14px;
-  padding: 14px;
+  gap: 16px;
+  padding: 18px;
 }
 
 .post-card {
   border: 1px solid #eef0f5;
-  border-radius: 16px;
-  padding: 12px 12px 10px;
-  background: #fff;
+  border-radius: 18px;
+  padding: 16px 16px 14px;
+  background: linear-gradient(180deg, #ffffff 0%, #fcfdff 100%);
   transition:
     box-shadow 0.2s ease,
     border-color 0.2s ease;
@@ -1150,7 +1157,7 @@ onMounted(async () => {
 
 .post-card:hover {
   border-color: rgba(79, 70, 229, 0.18);
-  box-shadow: 0 14px 32px rgba(15, 23, 42, 0.06);
+  box-shadow: 0 18px 36px rgba(15, 23, 42, 0.08);
 }
 
 .post-card.pin {
@@ -1536,8 +1543,8 @@ onMounted(async () => {
 }
 
 .rank {
-  margin-top: 16px;
-  padding: 14px;
+  margin-top: 18px;
+  padding: 16px;
 }
 
 .panel-head {

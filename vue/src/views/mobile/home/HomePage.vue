@@ -895,22 +895,23 @@ onMounted(async () => {
 <style scoped>
 .home {
   min-height: 100vh;
-  background: #f5f7fb;
+  background: transparent;
 }
 
 .topbar {
   position: sticky;
   top: 0;
   z-index: 10;
-  height: 64px;
+  min-height: 68px;
   display: grid;
   grid-template-columns: 220px 1fr auto 260px;
-  gap: 12px;
+  gap: 14px;
   align-items: center;
-  padding: 0 16px;
-  background: rgba(255, 255, 255, 0.9);
-  backdrop-filter: blur(12px);
-  border-bottom: 1px solid #eef0f5;
+  padding: 10px 18px;
+  background: rgba(255, 255, 255, 0.82);
+  backdrop-filter: blur(18px);
+  border-bottom: 1px solid rgba(226, 232, 240, 0.9);
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.04);
 }
 
 .brand {
@@ -928,9 +929,9 @@ onMounted(async () => {
 }
 
 .brand-name {
-  font-weight: 700;
+  font-weight: 900;
   letter-spacing: 0.5px;
-  color: #0f172a;
+  color: #111827;
 }
 
 .search {
@@ -940,12 +941,13 @@ onMounted(async () => {
 
 .search-input {
   width: 100%;
-  height: 38px;
-  padding: 0 14px;
-  border: 1px solid #e2e8f0;
-  background: #fff;
-  border-radius: 12px;
+  height: 42px;
+  padding: 0 16px;
+  border: 1px solid rgba(226, 232, 240, 0.95);
+  background: rgba(255, 255, 255, 0.92);
+  border-radius: 14px;
   outline: none;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8);
 }
 
 .actions {
@@ -955,12 +957,14 @@ onMounted(async () => {
 }
 
 .nav-btn {
-  height: 36px;
-  padding: 0 12px;
-  border: 1px solid #e2e8f0;
-  background: #fff;
-  border-radius: 10px;
+  height: 38px;
+  padding: 0 14px;
+  border: 1px solid rgba(226, 232, 240, 0.95);
+  background: rgba(255, 255, 255, 0.88);
+  border-radius: 12px;
   cursor: pointer;
+  color: #334155;
+  font-weight: 700;
 }
 
 .user {
@@ -998,56 +1002,58 @@ onMounted(async () => {
 .layout {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 16px;
+  padding: 22px 18px 32px;
   display: grid;
   grid-template-columns: 260px 1fr 320px;
-  gap: 16px;
+  gap: 18px;
   align-items: start;
 }
 
 .panel {
-  background: #fff;
-  border: 1px solid #eef0f5;
-  border-radius: 16px;
-  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.03);
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: 20px;
+  box-shadow: var(--card-shadow);
   overflow: hidden;
+  backdrop-filter: blur(10px);
 }
 
 .panel-title {
   font-weight: 900;
-  padding: 14px 14px 12px;
-  color: #0f172a;
-  border-bottom: 1px solid #f1f5f9;
+  padding: 16px 16px 13px;
+  color: #111827;
+  border-bottom: 1px solid rgba(241, 245, 249, 0.95);
 }
 
 .panel-head {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 14px 14px 10px;
-  border-bottom: 1px solid #f1f5f9;
+  padding: 16px 16px 12px;
+  border-bottom: 1px solid rgba(241, 245, 249, 0.95);
 }
 
 .panel-footer {
-  padding: 12px 14px 14px;
+  padding: 14px 16px 16px;
   display: flex;
   justify-content: center;
 }
 
 .ghost {
-  height: 34px;
-  padding: 0 12px;
-  border: 1px dashed #d7dbe5;
-  background: #fff;
-  border-radius: 10px;
+  height: 36px;
+  padding: 0 14px;
+  border: 1px dashed rgba(203, 213, 225, 0.95);
+  background: rgba(255, 255, 255, 0.88);
+  border-radius: 12px;
   cursor: pointer;
   color: #475569;
+  font-weight: 700;
 }
 
 .forum-list {
   display: grid;
   gap: 10px;
-  padding: 0 12px 12px;
+  padding: 2px 14px 14px;
 }
 
 .forum-item {
@@ -1055,10 +1061,10 @@ onMounted(async () => {
   grid-template-columns: 1fr auto;
   gap: 10px;
   align-items: center;
-  padding: 10px 12px;
-  border-radius: 12px;
-  border: 1px solid #eef0f5;
-  background: #fff;
+  padding: 12px 12px;
+  border-radius: 14px;
+  border: 1px solid rgba(238, 240, 245, 0.92);
+  background: linear-gradient(180deg, #ffffff 0%, #fbfdff 100%);
   cursor: pointer;
   text-align: left;
   transition:
@@ -1068,9 +1074,9 @@ onMounted(async () => {
 }
 
 .forum-item:hover {
-  border-color: rgba(79, 70, 229, 0.22);
-  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.06);
-  transform: translateY(-1px);
+  border-color: rgba(79, 70, 229, 0.24);
+  box-shadow: 0 14px 32px rgba(15, 23, 42, 0.08);
+  transform: translateY(-2px);
 }
 
 .forum-left {
@@ -1134,14 +1140,15 @@ onMounted(async () => {
 }
 
 .follow {
-  height: 30px;
+  height: 32px;
   padding: 0 12px;
   border: 1px solid #4f46e5;
   color: #4f46e5;
-  background: #fff;
+  background: rgba(255, 255, 255, 0.92);
   border-radius: 999px;
   cursor: pointer;
   font-weight: 800;
+  box-shadow: 0 4px 12px rgba(79, 70, 229, 0.08);
 }
 
 .center {
@@ -1152,45 +1159,53 @@ onMounted(async () => {
 .composer {
   display: grid;
   grid-template-columns: 44px 1fr auto;
-  gap: 12px;
+  gap: 14px;
   align-items: center;
-  padding: 12px 14px;
+  padding: 16px;
+  background:
+    radial-gradient(260px 120px at 0% 0%, rgba(79, 70, 229, 0.06), transparent 60%),
+    rgba(255, 255, 255, 0.9);
 }
 
 .composer-input {
-  height: 40px;
-  border: 1px solid #e2e8f0;
-  background: #f8fafc;
-  border-radius: 12px;
+  height: 44px;
+  border: 1px solid rgba(226, 232, 240, 0.96);
+  background: linear-gradient(180deg, #fbfdff 0%, #f8fafc 100%);
+  border-radius: 14px;
   text-align: left;
-  padding: 0 14px;
+  padding: 0 16px;
   cursor: pointer;
   color: #64748b;
+  font-weight: 600;
 }
 
 .icon-btn {
-  height: 34px;
-  padding: 0 12px;
-  border: 1px solid #e2e8f0;
-  background: #fff;
-  border-radius: 10px;
+  height: 38px;
+  padding: 0 14px;
+  border: 0;
+  background: linear-gradient(135deg, #4f46e5 0%, #6366f1 100%);
+  color: #fff;
+  border-radius: 12px;
   cursor: pointer;
+  font-weight: 800;
+  box-shadow: 0 10px 22px rgba(79, 70, 229, 0.22);
 }
 
 .tabs {
   display: flex;
   gap: 10px;
-  padding: 12px 14px 0;
+  padding: 12px 16px 0;
 }
 
 .tab {
-  height: 34px;
-  padding: 0 12px;
+  height: 36px;
+  padding: 0 14px;
   border: 0;
   background: transparent;
   border-bottom: 2px solid transparent;
   cursor: pointer;
   color: #475569;
+  font-weight: 700;
 }
 
 .tab.active {
@@ -1201,15 +1216,15 @@ onMounted(async () => {
 
 .post-list {
   display: grid;
-  gap: 14px;
-  padding: 14px;
+  gap: 16px;
+  padding: 16px;
 }
 
 .post-card {
-  border: 1px solid #eef0f5;
-  border-radius: 14px;
-  padding: 14px;
-  background: #fff;
+  border: 1px solid rgba(238, 240, 245, 0.92);
+  border-radius: 18px;
+  padding: 16px;
+  background: linear-gradient(180deg, #ffffff 0%, #fcfdff 100%);
   transition:
     box-shadow 0.2s ease,
     border-color 0.2s ease;
@@ -1217,7 +1232,7 @@ onMounted(async () => {
 
 .post-card:hover {
   border-color: rgba(79, 70, 229, 0.18);
-  box-shadow: 0 14px 32px rgba(15, 23, 42, 0.06);
+  box-shadow: 0 18px 36px rgba(15, 23, 42, 0.08);
 }
 
 .comments-box {

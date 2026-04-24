@@ -171,7 +171,7 @@ onMounted(async () => {
 <style scoped>
 .profile-page {
   min-height: 100vh;
-  background: #f5f7fb;
+  background: transparent;
 }
 
 .top {
@@ -182,10 +182,11 @@ onMounted(async () => {
   grid-template-columns: auto 1fr auto;
   gap: 12px;
   align-items: center;
-  padding: 12px 14px;
-  background: rgba(255, 255, 255, 0.9);
-  backdrop-filter: blur(12px);
-  border-bottom: 1px solid #eef0f5;
+  padding: 12px 18px;
+  background: rgba(255, 255, 255, 0.82);
+  backdrop-filter: blur(18px);
+  border-bottom: 1px solid rgba(226, 232, 240, 0.9);
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.04);
 }
 
 .back {
@@ -213,26 +214,28 @@ onMounted(async () => {
 }
 
 .main {
-  padding: 14px;
+  padding: 24px 18px 34px;
   max-width: 760px;
   margin: 0 auto;
   display: grid;
-  gap: 14px;
+  gap: 16px;
 }
 
 .card {
-  background: #fff;
-  border: 1px solid #eef0f5;
-  border-radius: 16px;
-  padding: 14px;
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: 22px;
+  padding: 18px;
   display: grid;
-  gap: 12px;
+  gap: 14px;
+  box-shadow: var(--card-shadow);
+  backdrop-filter: blur(10px);
 }
 
 .me {
   display: grid;
   grid-template-columns: 54px 1fr;
-  gap: 12px;
+  gap: 14px;
   align-items: center;
 }
 
@@ -241,6 +244,8 @@ onMounted(async () => {
   height: 54px;
   border-radius: 999px;
   object-fit: cover;
+  border: 2px solid rgba(255, 255, 255, 0.85);
+  box-shadow: 0 10px 24px rgba(79, 70, 229, 0.12);
 }
 
 .avatar.placeholder {
@@ -268,28 +273,31 @@ onMounted(async () => {
 
 .row {
   display: flex;
-  gap: 10px;
+  gap: 12px;
   flex-wrap: wrap;
 }
 
 .primary {
-  height: 36px;
-  padding: 0 14px;
+  height: 40px;
+  padding: 0 16px;
   border: 0;
-  background: #4f46e5;
+  background: linear-gradient(135deg, #4f46e5 0%, #6366f1 100%);
   color: #fff;
-  border-radius: 10px;
+  border-radius: 12px;
   cursor: pointer;
+  font-weight: 900;
+  box-shadow: 0 10px 24px rgba(79, 70, 229, 0.2);
 }
 
 .danger {
-  height: 36px;
-  padding: 0 14px;
+  height: 40px;
+  padding: 0 16px;
   border: 1px solid #fecaca;
-  background: #fff;
+  background: rgba(255, 255, 255, 0.9);
   color: #dc2626;
-  border-radius: 10px;
+  border-radius: 12px;
   cursor: pointer;
+  font-weight: 800;
 }
 
 .section-head {
@@ -322,11 +330,21 @@ onMounted(async () => {
 
 .item {
   border: 1px solid #eef0f5;
-  border-radius: 14px;
-  padding: 12px;
-  background: #fff;
+  border-radius: 16px;
+  padding: 14px;
+  background: linear-gradient(180deg, #ffffff 0%, #fbfdff 100%);
   cursor: pointer;
   text-align: left;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    transform 0.2s ease;
+}
+
+.item:hover {
+  border-color: rgba(79, 70, 229, 0.2);
+  box-shadow: 0 14px 32px rgba(15, 23, 42, 0.08);
+  transform: translateY(-2px);
 }
 
 .item-title {

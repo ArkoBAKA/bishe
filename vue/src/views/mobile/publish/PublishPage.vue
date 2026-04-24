@@ -272,7 +272,7 @@ onMounted(async () => {
 <style scoped>
 .publish-page {
   min-height: 100vh;
-  background: #f5f7fb;
+  background: transparent;
 }
 
 .top {
@@ -283,10 +283,11 @@ onMounted(async () => {
   grid-template-columns: auto 1fr auto;
   gap: 12px;
   align-items: center;
-  padding: 12px 14px;
-  background: rgba(255, 255, 255, 0.9);
-  backdrop-filter: blur(12px);
-  border-bottom: 1px solid #eef0f5;
+  padding: 12px 18px;
+  background: rgba(255, 255, 255, 0.82);
+  backdrop-filter: blur(18px);
+  border-bottom: 1px solid rgba(226, 232, 240, 0.9);
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.04);
 }
 
 .back {
@@ -314,19 +315,21 @@ onMounted(async () => {
 }
 
 .main {
-  padding: 14px;
+  padding: 24px 18px 34px;
   display: grid;
   place-items: start center;
 }
 
 .card {
   width: min(680px, 100%);
-  background: #fff;
-  border: 1px solid #eef0f5;
-  border-radius: 16px;
-  padding: 16px;
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: 22px;
+  padding: 20px;
   display: grid;
-  gap: 12px;
+  gap: 14px;
+  box-shadow: var(--card-shadow);
+  backdrop-filter: blur(10px);
 }
 
 .field {
@@ -353,12 +356,12 @@ onMounted(async () => {
 
 input,
 select {
-  height: 38px;
-  padding: 0 12px;
-  border: 1px solid #e2e8f0;
-  border-radius: 10px;
+  height: 42px;
+  padding: 0 14px;
+  border: 1px solid rgba(226, 232, 240, 0.95);
+  border-radius: 12px;
   outline: none;
-  background: #fff;
+  background: rgba(255, 255, 255, 0.94);
 }
 
 .toolbar {
@@ -393,10 +396,11 @@ select {
 }
 
 .editor-wrap {
-  border: 1px solid #e2e8f0;
-  border-radius: 12px;
+  border: 1px solid rgba(226, 232, 240, 0.95);
+  border-radius: 14px;
   overflow: hidden;
-  background: #fff;
+  background: rgba(255, 255, 255, 0.94);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8);
 }
 
 .editor {
@@ -434,26 +438,30 @@ select {
 .actions {
   display: flex;
   gap: 12px;
+  padding-top: 4px;
 }
 
 .primary {
-  height: 36px;
-  padding: 0 14px;
+  height: 40px;
+  padding: 0 16px;
   border: 0;
-  background: #4f46e5;
+  background: linear-gradient(135deg, #4f46e5 0%, #6366f1 100%);
   color: #fff;
-  border-radius: 10px;
+  border-radius: 12px;
   cursor: pointer;
+  font-weight: 900;
+  box-shadow: 0 10px 24px rgba(79, 70, 229, 0.2);
 }
 
 .danger {
-  height: 36px;
-  padding: 0 14px;
+  height: 40px;
+  padding: 0 16px;
   border: 1px solid #fecaca;
-  background: #fff;
+  background: rgba(255, 255, 255, 0.9);
   color: #dc2626;
-  border-radius: 10px;
+  border-radius: 12px;
   cursor: pointer;
+  font-weight: 800;
 }
 
 .error {

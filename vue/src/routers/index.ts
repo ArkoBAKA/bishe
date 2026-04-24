@@ -34,6 +34,12 @@ const routes: RouteRecordRaw[] = [
         component: () => import('@/views/mobile/profile/ProfilePage.vue')
       },
       {
+        path: 'messages',
+        name: 'mobile-messages',
+        meta: { requiresAuth: true },
+        component: () => import('@/views/mobile/profile/MessagesPage.vue')
+      },
+      {
         path: 'login',
         name: 'mobile-login',
         component: () => import('@/views/mobile/auth/LoginPage.vue')

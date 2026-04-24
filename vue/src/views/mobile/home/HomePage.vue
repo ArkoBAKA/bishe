@@ -509,56 +509,14 @@
         </form>
       </div>
     </div>
-
-    <div v-if="notifyOpen" class="drawer-mask" @click.self="notifyOpen = false">
-      <div class="drawer">
-        <div class="drawer-head">
-          <div class="drawer-title">消息</div>
-          <button class="link" type="button" @click="notifyOpen = false">
-            关闭
-          </button>
-        </div>
-        <div v-if="!auth.isAuthed" class="muted pad">
-          <button class="primary" type="button" @click="openLogin">
-            登录后查看消息
-          </button>
-        </div>
-        <div v-else-if="notifyLoading" class="muted pad">加载中...</div>
-        <div v-else-if="notifications.length === 0" class="muted pad">
-          暂无消息
-        </div>
-        <div v-else class="notify-list">
-          <div
-            v-for="n in notifications"
-            :key="n.notificationId"
-            class="notify-item"
-          >
-            <div class="notify-title">
-              <span class="dot" :class="{ read: n.isRead }" />
-              <span>{{ n.title || `通知 #${n.notificationId}` }}</span>
-            </div>
-            <div v-if="n.content" class="notify-content">{{ n.content }}</div>
-            <div v-if="n.createdAt" class="notify-time">
-              {{ formatTime(n.createdAt) }}
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
-import type { CommentItem, Forum, NotificationItem, Post } from "@/types/api";
-import {
-  feedApi,
-  followsApi,
-  forumsApi,
-  notificationsApi,
-  usersApi,
-} from "@/apis";
+import type { CommentItem, Forum, Post } from "@/types/api";
+import { feedApi, followsApi, forumsApi, usersApi } from "@/apis";
 import { useAuthStore } from "@/stores/auth";
 
 const router = useRouter();
@@ -604,10 +562,6 @@ const replyParentByPostId = ref<Record<number, number>>({});
 const replyContentByPostId = ref<Record<number, string>>({});
 const sendingPostId = ref<number | null>(null);
 const sendingCommentId = ref<number | null>(null);
-
-const notifyOpen = ref(false);
-const notifyLoading = ref(false);
-const notifications = ref<NotificationItem[]>([]);
 
 const isFollowed = (forumId: number) => myFollowForumIdSet.value.has(forumId);
 
@@ -777,7 +731,7 @@ const onLoginSubmit = async () => {
     loginOpen.value = false;
     loginAccount.value = "";
     loginPassword.value = "";
-    await Promise.all([loadFollows(), loadPosts(), loadNotificationsIfOpen()]);
+    await Promise.all([loadFollows(), loadPosts()]);
   } catch (e: unknown) {
     loginError.value = e instanceof Error ? e.message : "登录失败";
   } finally {
@@ -789,7 +743,6 @@ const onLogout = () => {
   auth.logout();
   myFollowForumIdSet.value = new Set();
   posts.value = [];
-  notifications.value = [];
   loadPosts();
 };
 
@@ -1004,24 +957,12 @@ const submitReply = async (postId: number) => {
   }
 };
 
-const loadNotificationsIfOpen = async () => {
-  if (!notifyOpen.value) return;
-  if (!auth.isAuthed) return;
-  notifyLoading.value = true;
-  try {
-    const data = await notificationsApi.getNotifications({
-      pageNum: 1,
-      pageSize: 20,
-    });
-    notifications.value = data.list || [];
-  } finally {
-    notifyLoading.value = false;
+const onClickNotifications = () => {
+  if (!auth.isAuthed) {
+    openLogin();
+    return;
   }
-};
-
-const onClickNotifications = async () => {
-  notifyOpen.value = true;
-  await loadNotificationsIfOpen();
+  router.push({ name: "mobile-messages" });
 };
 
 const onClickPublish = () => {
@@ -1793,8 +1734,7 @@ onMounted(async () => {
   padding: 14px;
 }
 
-.modal-mask,
-.drawer-mask {
+.modal-mask {
   position: fixed;
   inset: 0;
   background: rgba(15, 23, 42, 0.42);
@@ -1891,115 +1831,6 @@ onMounted(async () => {
 .error {
   color: #dc2626;
   margin: 0;
-}
-
-.drawer-mask {
-  place-items: end;
-}
-
-.drawer {
-  width: min(520px, 100vw);
-  height: min(640px, calc(100vh - 64px));
-  background: #fff;
-  border-top-left-radius: 16px;
-  border-top-right-radius: 16px;
-  border: 1px solid #eef0f5;
-  overflow: auto;
-}
-
-.drawer-head {
-  position: sticky;
-  top: 0;
-  background: #fff;
-  border-bottom: 1px solid #eef0f5;
-  padding: 12px 14px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.drawer-title {
-  font-weight: 800;
-  color: #0f172a;
-}
-
-.comment-list {
-  padding: 12px 14px;
-  display: grid;
-  gap: 12px;
-}
-
-.comment-item {
-  display: grid;
-  grid-template-columns: 34px 1fr;
-  gap: 10px;
-  align-items: start;
-}
-
-.comment-head {
-  display: flex;
-  justify-content: space-between;
-  gap: 10px;
-  align-items: baseline;
-}
-
-.comment-author {
-  font-weight: 700;
-  color: #0f172a;
-}
-
-.comment-time {
-  font-size: 12px;
-  color: #94a3b8;
-}
-
-.comment-content {
-  margin-top: 4px;
-  white-space: pre-wrap;
-  color: #334155;
-}
-
-.notify-list {
-  padding: 12px 14px;
-  display: grid;
-  gap: 12px;
-}
-
-.notify-item {
-  border: 1px solid #eef0f5;
-  border-radius: 12px;
-  padding: 12px;
-}
-
-.notify-title {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-weight: 700;
-  color: #0f172a;
-}
-
-.dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 99px;
-  background: #4f46e5;
-}
-
-.dot.read {
-  background: #cbd5e1;
-}
-
-.notify-content {
-  margin-top: 6px;
-  color: #334155;
-  white-space: pre-wrap;
-}
-
-.notify-time {
-  margin-top: 8px;
-  font-size: 12px;
-  color: #94a3b8;
 }
 
 @media (max-width: 1024px) {

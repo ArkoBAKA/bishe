@@ -88,8 +88,8 @@
         </div>
         <div v-if="loadingUnread" class="muted">加载中...</div>
         <div v-else class="muted">未读 {{ unreadCount }} 条</div>
-        <button class="ghost" type="button" @click="router.replace('/m/home')">
-          去首页查看
+        <button class="ghost" type="button" @click="router.push('/m/messages')">
+          查看消息
         </button>
       </div>
     </main>

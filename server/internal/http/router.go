@@ -84,8 +84,8 @@ func NewRouter(deps Deps) *gin.Engine {
 			Name:        "单文件上传",
 			Method:      "POST",
 			Path:        "/api/v1/upload",
-			Auth:        "需要",
-			Role:        "user",
+			Auth:        "public 不需要；private 需要",
+			Role:        "guest/user",
 			Description: "multipart/form-data 上传单文件，返回可访问 URL",
 			Body: []FieldDoc{
 				{Name: "file", Type: "file", Required: true, Desc: "文件本体"},

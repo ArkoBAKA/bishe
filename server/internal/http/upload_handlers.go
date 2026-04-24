@@ -40,10 +40,7 @@ func uploadHandler(deps Deps) gin.HandlerFunc {
 	}
 
 	return func(c *gin.Context) {
-		ai, ok := RequireAuth(c, deps)
-		if !ok {
-			return
-		}
+		ai, hasAuth := ParseAuth(c, deps)
 
 		c.Request.Body = http.MaxBytesReader(c.Writer, c.Request.Body, maxReqBytes)
 		if err := c.Request.ParseMultipartForm(32 << 20); err != nil {
@@ -57,6 +54,10 @@ func uploadHandler(deps Deps) gin.HandlerFunc {
 		}
 		if bucket != "public" && bucket != "private" {
 			RespondFail(c, http.StatusBadRequest, 40002, "invalid bucket")
+			return
+		}
+		if bucket == "private" && !hasAuth {
+			RespondFail(c, http.StatusUnauthorized, 40101, "unauthorized")
 			return
 		}
 

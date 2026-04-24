@@ -371,18 +371,6 @@
                 <span class="intro-v">{{ createdAtText }}</span>
               </div>
             </div>
-            <button
-              class="ghost full"
-              type="button"
-              @click="
-                router.push({
-                  name: 'mobile-login',
-                  query: { redirect: route.fullPath },
-                })
-              "
-            >
-              申请加入管理团队
-            </button>
           </div>
 
           <div class="panel rank">

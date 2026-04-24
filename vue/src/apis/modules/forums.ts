@@ -8,6 +8,13 @@ export const getForums = (params?: { pageNum?: number; pageSize?: number; keywor
     params
   })
 
+export const createForum = (payload: { name: string; description?: string; coverUrl?: string }) =>
+  request<Forum>({
+    url: '/api/v1/forums',
+    method: 'POST',
+    data: payload
+  })
+
 export const getForumDetail = (forumId: number | string) =>
   request<Forum>({
     url: `/api/v1/forums/${forumId}`,
@@ -20,4 +27,3 @@ export const getForumPosts = (forumId: number | string, params?: { pageNum?: num
     method: 'GET',
     params
   })
-

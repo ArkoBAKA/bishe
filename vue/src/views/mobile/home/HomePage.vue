@@ -1,7 +1,7 @@
 <template>
   <div class="home">
     <header class="topbar">
-      <div class="brand" @click="router.push('/m/home')">
+      <div class="brand" @click="goHome">
         <img class="logo" src="@/assets/logo.png" alt="logo" />
         <span class="brand-name">智聚社区</span>
       </div>
@@ -15,7 +15,7 @@
       </div>
 
       <nav class="actions">
-        <button class="nav-btn" type="button" @click="router.push('/m/home')">
+        <button class="nav-btn" type="button" @click="goHome">
           首页
         </button>
         <button class="nav-btn" type="button" @click="onClickNotifications">
@@ -100,8 +100,8 @@
             </button>
           </div>
           <div class="panel-footer">
-            <button class="ghost" type="button" @click="loadForums()">
-              发现更多贴吧
+            <button class="ghost" type="button" @click="openCreateForum">
+              创建贴吧
             </button>
           </div>
         </div>
@@ -364,7 +364,7 @@
         <div class="panel">
           <div class="panel-head">
             <div class="panel-title">热门贴吧</div>
-            <button class="link" type="button" @click="router.push('/m/home')">
+            <button class="link" type="button" @click="goHome">
               查看全部
             </button>
           </div>
@@ -449,6 +449,48 @@
       </div>
     </div>
 
+    <div
+      v-if="createForumOpen"
+      class="modal-mask"
+      @click.self="closeCreateForum"
+    >
+      <div class="modal">
+        <div class="modal-title">创建贴吧</div>
+        <form class="modal-form" @submit.prevent="onCreateForumSubmit">
+          <label class="field">
+            <span>名称</span>
+            <input v-model.trim="createForumName" placeholder="请输入贴吧名称" />
+          </label>
+          <label class="field">
+            <span>简介</span>
+            <textarea
+              v-model.trim="createForumDescription"
+              placeholder="一句话介绍这个贴吧（可选）"
+            />
+          </label>
+          <label class="field">
+            <span>封面</span>
+            <input
+              v-model.trim="createForumCoverUrl"
+              placeholder="封面图片 URL（可选）"
+            />
+          </label>
+
+          <button
+            class="primary"
+            type="submit"
+            :disabled="createForumLoading || !createForumName.trim()"
+          >
+            {{ createForumLoading ? "创建中..." : "创建" }}
+          </button>
+          <button class="ghost" type="button" @click="closeCreateForum">
+            取消
+          </button>
+          <p v-if="createForumError" class="error">{{ createForumError }}</p>
+        </form>
+      </div>
+    </div>
+
     <div v-if="notifyOpen" class="drawer-mask" @click.self="notifyOpen = false">
       <div class="drawer">
         <div class="drawer-head">
@@ -489,12 +531,13 @@
 
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from "vue";
-import { useRouter } from "vue-router";
+import { useRoute, useRouter } from "vue-router";
 import type { CommentItem, Forum, NotificationItem, Post } from "@/types/api";
 import { feedApi, followsApi, forumsApi, notificationsApi } from "@/apis";
 import { useAuthStore } from "@/stores/auth";
 
 const router = useRouter();
+const route = useRoute();
 const auth = useAuthStore();
 
 const keyword = ref("");
@@ -512,6 +555,13 @@ const loginAccount = ref("");
 const loginPassword = ref("");
 const loginLoading = ref(false);
 const loginError = ref("");
+
+const createForumOpen = ref(false);
+const createForumName = ref("");
+const createForumDescription = ref("");
+const createForumCoverUrl = ref("");
+const createForumLoading = ref(false);
+const createForumError = ref("");
 
 type CommentThreadItem = {
   comment: CommentItem;
@@ -587,6 +637,14 @@ const openLogin = () => {
   loginError.value = "";
 };
 
+const goHome = async () => {
+  if (route.name === "mobile-home") {
+    await Promise.all([loadForums(), loadFollows(), loadPosts()]);
+    return;
+  }
+  router.push("/m/home");
+};
+
 const goRegister = () => {
   loginOpen.value = false;
   router.push({ name: "mobile-register" });
@@ -594,6 +652,52 @@ const goRegister = () => {
 
 const closeLogin = () => {
   loginOpen.value = false;
+};
+
+const openCreateForum = () => {
+  if (!auth.isAuthed) {
+    openLogin();
+    return;
+  }
+  createForumOpen.value = true;
+  createForumError.value = "";
+};
+
+const closeCreateForum = () => {
+  createForumOpen.value = false;
+  createForumLoading.value = false;
+  createForumError.value = "";
+};
+
+const onCreateForumSubmit = async () => {
+  if (!auth.isAuthed) {
+    openLogin();
+    return;
+  }
+  const name = createForumName.value.trim();
+  if (!name) {
+    createForumError.value = "请输入贴吧名称";
+    return;
+  }
+
+  createForumLoading.value = true;
+  createForumError.value = "";
+  try {
+    await forumsApi.createForum({
+      name,
+      description: createForumDescription.value.trim() || undefined,
+      coverUrl: createForumCoverUrl.value.trim() || undefined,
+    });
+    createForumOpen.value = false;
+    createForumName.value = "";
+    createForumDescription.value = "";
+    createForumCoverUrl.value = "";
+    await Promise.all([loadForums(), loadFollows(), loadPosts()]);
+  } catch (e: unknown) {
+    createForumError.value = e instanceof Error ? e.message : "创建失败";
+  } finally {
+    createForumLoading.value = false;
+  }
 };
 
 const onLoginSubmit = async () => {

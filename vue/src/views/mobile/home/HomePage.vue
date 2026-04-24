@@ -283,8 +283,70 @@
                       <div class="comment-content">
                         {{ it.comment.content }}
                       </div>
+                      <div class="comment-actions">
+                        <button
+                          class="comment-btn"
+                          type="button"
+                          @click="openReply(p.postId, it.comment.commentId)"
+                        >
+                          回复
+                        </button>
+                      </div>
+
+                      <div
+                        v-if="
+                          replyParentByPostId[p.postId] === it.comment.commentId
+                        "
+                        class="reply-box"
+                      >
+                        <textarea
+                          v-model.trim="replyContentByPostId[p.postId]"
+                          class="reply-input"
+                          placeholder="写下你的回复..."
+                        />
+                        <div class="reply-actions">
+                          <button
+                            class="comment-send"
+                            type="button"
+                            :disabled="
+                              sendingCommentId === it.comment.commentId
+                            "
+                            @click="submitReply(p.postId)"
+                          >
+                            {{
+                              sendingCommentId === it.comment.commentId
+                                ? "发送中..."
+                                : "发送"
+                            }}
+                          </button>
+                          <button
+                            class="comment-cancel"
+                            type="button"
+                            @click="cancelReply(p.postId)"
+                          >
+                            取消
+                          </button>
+                        </div>
+                      </div>
                     </div>
                   </div>
+                </div>
+
+                <div class="add-comment">
+                  <input
+                    v-model.trim="newCommentByPostId[p.postId]"
+                    class="add-input"
+                    placeholder="新增评论..."
+                    @focus="prepareComment(p.postId)"
+                  />
+                  <button
+                    class="add-send"
+                    type="button"
+                    :disabled="sendingPostId === p.postId"
+                    @click="submitNewComment(p.postId)"
+                  >
+                    {{ sendingPostId === p.postId ? "发送中..." : "发送" }}
+                  </button>
                 </div>
               </div>
             </article>
@@ -459,6 +521,11 @@ type CommentThreadItem = {
 const commentsByPostId = ref<Record<number, CommentItem[]>>({});
 const commentsLoadingByPostId = ref<Record<number, boolean>>({});
 const commentsExpandedByPostId = ref<Record<number, boolean>>({});
+const newCommentByPostId = ref<Record<number, string>>({});
+const replyParentByPostId = ref<Record<number, number>>({});
+const replyContentByPostId = ref<Record<number, string>>({});
+const sendingPostId = ref<number | null>(null);
+const sendingCommentId = ref<number | null>(null);
 
 const notifyOpen = ref(false);
 const notifyLoading = ref(false);
@@ -673,8 +740,8 @@ const commentThread = (postId: number) => {
   return buildCommentThread(list);
 };
 
-const ensureCommentsLoaded = async (postId: number) => {
-  if (commentsByPostId.value[postId]) return;
+const ensureCommentsLoaded = async (postId: number, force = false) => {
+  if (commentsByPostId.value[postId] && !force) return;
   commentsLoadingByPostId.value[postId] = true;
   try {
     const data = await feedApi.getPostComments(postId, {
@@ -688,9 +755,78 @@ const ensureCommentsLoaded = async (postId: number) => {
 };
 
 const toggleComments = async (postId: number) => {
+  if (!auth.isAuthed) {
+    openLogin();
+    return;
+  }
   const next = !isCommentsExpanded(postId);
   commentsExpandedByPostId.value[postId] = next;
   if (next) await ensureCommentsLoaded(postId);
+};
+
+const prepareComment = async (postId: number) => {
+  if (!auth.isAuthed) {
+    openLogin();
+    return;
+  }
+  commentsExpandedByPostId.value[postId] = true;
+  await ensureCommentsLoaded(postId);
+};
+
+const submitNewComment = async (postId: number) => {
+  if (!auth.isAuthed) {
+    openLogin();
+    return;
+  }
+  const text = (newCommentByPostId.value[postId] || "").trim();
+  if (!text) return;
+  sendingPostId.value = postId;
+  try {
+    await feedApi.createComment(postId, { content: text });
+    newCommentByPostId.value[postId] = "";
+    await prepareComment(postId);
+    await ensureCommentsLoaded(postId, true);
+  } finally {
+    sendingPostId.value = null;
+  }
+};
+
+const openReply = async (postId: number, commentId: number) => {
+  if (!auth.isAuthed) {
+    openLogin();
+    return;
+  }
+  await prepareComment(postId);
+  replyParentByPostId.value[postId] = commentId;
+  if (!replyContentByPostId.value[postId])
+    replyContentByPostId.value[postId] = "";
+};
+
+const cancelReply = (postId: number) => {
+  replyParentByPostId.value[postId] = 0 as unknown as number;
+  replyContentByPostId.value[postId] = "";
+};
+
+const submitReply = async (postId: number) => {
+  if (!auth.isAuthed) {
+    openLogin();
+    return;
+  }
+  const parentId = replyParentByPostId.value[postId];
+  if (!parentId) return;
+  const text = (replyContentByPostId.value[postId] || "").trim();
+  if (!text) return;
+  sendingCommentId.value = parentId;
+  try {
+    await feedApi.createComment(postId, {
+      content: text,
+      parentCommentId: parentId,
+    });
+    cancelReply(postId);
+    await ensureCommentsLoaded(postId, true);
+  } finally {
+    sendingCommentId.value = null;
+  }
 };
 
 const loadNotificationsIfOpen = async () => {
@@ -1140,6 +1276,103 @@ onMounted(async () => {
   color: #334155;
   line-height: 1.7;
   white-space: pre-wrap;
+}
+
+.comment-actions {
+  margin-top: 8px;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.comment-btn {
+  height: 28px;
+  padding: 0 10px;
+  border: 1px solid #e2e8f0;
+  background: #fff;
+  border-radius: 999px;
+  cursor: pointer;
+  font-size: 12px;
+  color: #475569;
+  font-weight: 800;
+}
+
+.reply-box {
+  margin-top: 10px;
+  border-top: 1px dashed #e2e8f0;
+  padding-top: 10px;
+  display: grid;
+  gap: 10px;
+}
+
+.reply-input {
+  min-height: 70px;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 10px 12px;
+  outline: none;
+  resize: vertical;
+  font-family: inherit;
+  line-height: 1.6;
+  background: #fff;
+}
+
+.reply-actions {
+  display: inline-flex;
+  gap: 10px;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+}
+
+.comment-send {
+  height: 32px;
+  padding: 0 12px;
+  border: 0;
+  background: #4f46e5;
+  color: #fff;
+  border-radius: 12px;
+  cursor: pointer;
+  font-weight: 900;
+}
+
+.comment-cancel {
+  height: 32px;
+  padding: 0 12px;
+  border: 1px solid #e2e8f0;
+  background: #fff;
+  border-radius: 12px;
+  cursor: pointer;
+  font-weight: 800;
+  color: #334155;
+}
+
+.add-comment {
+  margin-top: 12px;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 10px;
+  align-items: center;
+  border-top: 1px solid #eef0f5;
+  padding-top: 12px;
+}
+
+.add-input {
+  height: 38px;
+  padding: 0 12px;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  outline: none;
+  background: #fff;
+}
+
+.add-send {
+  height: 38px;
+  padding: 0 12px;
+  border: 0;
+  background: #4f46e5;
+  color: #fff;
+  border-radius: 12px;
+  cursor: pointer;
+  font-weight: 900;
 }
 
 @media (max-width: 1100px) {
